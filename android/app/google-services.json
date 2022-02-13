@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "315957121112",
+    "project_id": "olddragons-sheet",
+    "storage_bucket": "olddragons-sheet.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:315957121112:android:aceb32acf508dccf3f7a2d",
+        "android_client_info": {
+          "package_name": "com.leandrodasilva.ods"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "315957121112-f2pmo49rrf5q99hbfuqp49rvren0454a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.leandrodasilva.ods",
+            "certificate_hash": "3dc7c255c4f63e3d936514c0a62c2cf499f689ad"
+          }
+        },
+        {
+          "client_id": "315957121112-dcjoq388bbk80vlifjk7v4a0fv57h76k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbmss6UxQF53-GqnTvypBk1n8xXTwi83Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "315957121112-dcjoq388bbk80vlifjk7v4a0fv57h76k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "315957121112-88lb7d650shjed2m4vaoo4ks4in8r6qn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lesys.ods"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:315957121112:android:21e88ad05e2a95a93f7a2d",
+        "android_client_info": {
+          "package_name": "com.lesys.ods"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "315957121112-10cn8oo8ro06fss7lmdf80vgsii69pgl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lesys.ods",
+            "certificate_hash": "3dc7c255c4f63e3d936514c0a62c2cf499f689ad"
+          }
+        },
+        {
+          "client_id": "315957121112-dcjoq388bbk80vlifjk7v4a0fv57h76k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbmss6UxQF53-GqnTvypBk1n8xXTwi83Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "315957121112-dcjoq388bbk80vlifjk7v4a0fv57h76k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "315957121112-88lb7d650shjed2m4vaoo4ks4in8r6qn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lesys.ods"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
