@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
 import 'package:ods/screens/race_selection_screen.dart';
 import 'package:provider/provider.dart';
@@ -25,16 +26,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
   Sheet? selectedItem;
   AssetImage logo = const AssetImage("assets/images/logo.png");
   Image background = Image.asset("assets/images/background.png");
-  final List raceList = [
-    {
-      "name": "Orc",
-      "img": 'assets/images/orc.png',
-    },
-    {
-      "name": "Humano",
-      "img": 'assets/images/human.png',
-    }
-  ];
+  final CharacterController characterController = CharacterController();
 
   _SheetsScreenState() {
     sm = SheetModel();
@@ -42,27 +34,22 @@ class _SheetsScreenState extends State<SheetsScreen> {
   }
 
   Widget _raceImg(sheet) {
-    var index = raceList.indexWhere(
-        (element) => element['name'].toString().compareTo(sheet.race) == 0);
-
-    if (index >= 0) {
-      return Stack(
-        overflow: Overflow.visible,
-        clipBehavior: Clip.hardEdge,
-        children: [
-          Positioned(
-            top: -50,
-            right: 50,
-            child: Image(
-              height: 150,
-              image: AssetImage(raceList[index]['img']),
+    return Stack(
+      overflow: Overflow.visible,
+      clipBehavior: Clip.hardEdge,
+      children: [
+        Positioned(
+          top: -50,
+          right: 50,
+          child: Image(
+            height: 150,
+            image: AssetImage(
+              characterController.findOneByRaceName(sheet.race).img,
             ),
           ),
-        ],
-      );
-    }
-
-    return const Icon(Icons.image);
+        ),
+      ],
+    );
   }
 
   _buildCards(SheetModel sm) {

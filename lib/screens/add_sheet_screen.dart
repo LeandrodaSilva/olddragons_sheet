@@ -66,6 +66,7 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                                       vertical: 8.0,
                                     ),
                                     child: TextFormField(
+                                      readOnly: true,
                                       decoration: const InputDecoration(
                                         hintText: 'Raça',
                                       ),
@@ -88,8 +89,9 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                                       vertical: 8.0,
                                     ),
                                     child: TextFormField(
+                                      readOnly: true,
                                       decoration: const InputDecoration(
-                                        hintText: 'Classe | Especialização',
+                                        hintText: 'Classe',
                                       ),
                                       initialValue: widget.item.classEspec,
                                       onChanged: (value) {
