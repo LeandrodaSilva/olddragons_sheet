@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CustomSignInScreen extends StatelessWidget {
   const CustomSignInScreen({Key? key}) : super(key: key);
@@ -36,18 +37,28 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
     });
     try {
       UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+          .signInWithEmailAndPassword(email: email.trim(), password: password);
 
+      final user = userCredential.user;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Logado ${user?.uid}'),
+      ));
       setState(() {
         isLoading = false;
       });
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Nenhum usuário encontrado com esse e-mail'),
+        ));
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Senha incorreta'),
+        ));
       } else {
-        print(e.message);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message.toString()),
+        ));
       }
       setState(() {
         isLoading = false;
@@ -55,11 +66,36 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
     }
   }
 
-  Future<UserCredential> signInWithGoogle() async {
-    // Create a new provider
-    GoogleAuthProvider googleProvider = GoogleAuthProvider();
-    // Once signed in, return the UserCredential
-    return await FirebaseAuth.instance.signInWithPopup(googleProvider);
+  Future<void> signInWithGoogle() async {
+    try {
+      UserCredential userCredential;
+      if (!kIsWeb) {
+        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+        final GoogleSignInAuthentication? googleAuth =
+            await googleUser?.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth?.accessToken,
+          idToken: googleAuth?.idToken,
+        );
+        userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+      } else {
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        userCredential =
+            await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      }
+
+      final user = userCredential.user;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Logado ${user?.uid} com Google'),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha no login com Google: $e'),
+        ),
+      );
+    }
   }
 
   void _validateForm() {
@@ -164,12 +200,12 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                         padding: EdgeInsets.symmetric(
                           vertical: 16.0,
                         ),
-                        child:  Text("OU"),
+                        child: Text("OU"),
                       ),
                       SignInButton(
                         Buttons.Google,
                         text: "Logar com Google",
-                        onPressed: () => signInWithGoogle(),
+                        onPressed: signInWithGoogle,
                       ),
                     ],
                   ),
