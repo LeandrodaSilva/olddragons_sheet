@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/button_list.dart';
+import 'package:flutter_signin_button/button_view.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class CustomSignInScreen extends StatelessWidget {
   const CustomSignInScreen({Key? key}) : super(key: key);
@@ -52,6 +55,13 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
     }
   }
 
+  Future<UserCredential> signInWithGoogle() async {
+    // Create a new provider
+    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithPopup(googleProvider);
+  }
+
   void _validateForm() {
     if (_formKey.currentState!.validate()) {
       doLogin();
@@ -74,13 +84,9 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image(
-              image: logo,
-              width: 200,
-            ),
             Card(
               elevation: 10,
-              shadowColor: const Color.fromRGBO(247, 255, 0, 1.0),
+              shadowColor: Color.fromRGBO(172, 25, 20, 1),
               child: Form(
                 key: _formKey,
                 child: Container(
@@ -92,18 +98,10 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(30),
-                        child: const Text(
-                          "Login",
-                          style: TextStyle(
-                            color: Color.fromRGBO(
-                              172,
-                              25,
-                              20,
-                              1,
-                            ),
-                            fontSize: 32,
-                          ),
+                        padding: const EdgeInsets.all(4),
+                        child: Image(
+                          image: logo,
+                          width: 100,
                         ),
                       ),
                       Padding(
@@ -161,6 +159,17 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                           onPressed: isLoading ? null : _validateForm,
                           child: const Text('Logar'),
                         ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 16.0,
+                        ),
+                        child:  Text("OU"),
+                      ),
+                      SignInButton(
+                        Buttons.Google,
+                        text: "Logar com Google",
+                        onPressed: () => signInWithGoogle(),
                       ),
                     ],
                   ),
