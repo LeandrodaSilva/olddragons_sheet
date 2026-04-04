@@ -2,11 +2,12 @@
 
 ## Project Overview
 
-**OldDragons Sheet** (`ods`) is a cross-platform Flutter app for managing Old Dragon RPG character sheets. It supports Web, iOS, Android, and macOS via Firebase backend (Auth, Firestore, Hosting).
+**OldDragons Sheet** (`ods`) is a cross-platform Flutter app for creating and playing Old Dragon RPG characters. The user builds their character (race, class, attributes) and then plays with it through an interactive interface that replaces the traditional paper sheet — with inventory management, equipment, item shop, dice rolling, and everything needed to run an RPG campaign session.
 
 - **Version:** 2.1.0+12
 - **Dart SDK:** >=2.16.1 <3.0.0
 - **Flutter channel:** stable
+- **Language:** Portuguese (Brazilian)
 
 ## Common Commands
 
