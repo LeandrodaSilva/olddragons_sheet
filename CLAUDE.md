@@ -103,6 +103,62 @@ Required secret: `FIREBASE_SERVICE_ACCOUNT_OLDDRAGONS_SHEET`
 
 Uses `flutter_lints` with config in `analysis_options.yaml`. Always run `flutter analyze` before committing.
 
+## Design System Tokens
+
+### Colors
+| Token | Value | Usage |
+|-------|-------|-------|
+| Primary | `#AC1914` / `RGB(172, 25, 20)` | AppBar, buttons, titles, borders |
+| Background | `#FFFFFF` | Scaffold, AppBar background |
+| Surface Light | `RGBA(196, 196, 196, 0.5)` | Card backgrounds |
+| Surface Medium | `RGBA(196, 196, 196, 0.9)` | Content area background |
+
+### Typography
+- **Heading:** fontSize 28, FontWeight.bold
+- **Body:** fontSize 18
+- **Font:** Material default (no custom fonts)
+
+### Spacing & Borders
+- Border Radius: Input `8px`, Card `30px`, Button `38px`
+- Elevation: Default `3`, Selected `10`, Flat `0`
+- Max Width: Forms/Cards `600px`, Sign-in `400px`
+
+## Old Dragon Game Reference
+
+### Attribute Modifiers (Table 1.1)
+| Value | Modifier |
+|-------|----------|
+| 2-3 | -3 |
+| 4-5 | -2 |
+| 6-8 | -1 |
+| 9-12 | 0 |
+| 13-14 | +1 |
+| 15-16 | +2 |
+| 17-18 | +3 |
+| 19-20 | +4 |
+
+### Derived Stats Formulas
+```
+PV = Class Hit Die + CON modifier (per level, up to 10th)
+CA = 10 + DEX mod + Armor + Shield + Others
+BAC (melee) = Class BA + STR mod + Others
+BAD (ranged) = Class BA + DEX mod + Others
+JPD = Base JP + DEX mod    (physical dodge)
+JPC = Base JP + CON mod    (physical endurance)
+JPS = Base JP + WIS mod    (mental resistance)
+MV = Race base - Armor load - Others
+```
+
+### Money System
+```
+10 PC (Copper) = 1 PP (Silver)
+10 PP (Silver) = 1 PO (Gold)
+Starting gold: 3d6 x 10 PO
+```
+
+### SRD Reference
+Full game data (races, classes, equipment tables, spells) documented in `/root/.claude/plans/playful-percolating-kahan.md`
+
 ## Notes for AI Assistants
 
 - Firebase config is in `lib/firebase_options.dart` — do not modify API keys
@@ -110,3 +166,4 @@ Uses `flutter_lints` with config in `analysis_options.yaml`. Always run `flutter
 - Tests are minimal (`test/widget_test.dart` is a commented-out template) — add tests when creating new features
 - The `web/manifest.json` PWA theme color (#0175C2 blue) differs from the app's red theme — this is intentional
 - No `.env` files exist; Firebase config is embedded in source
+- Full MVP plan with screen specs, data models, and Old Dragon game reference is in `/root/.claude/plans/playful-percolating-kahan.md`
