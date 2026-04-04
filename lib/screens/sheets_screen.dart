@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/screens/play_screen.dart';
 import 'package:ods/screens/race_selection_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -35,8 +36,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
 
   Widget _raceImg(sheet) {
     return Stack(
-      overflow: Overflow.visible,
-      clipBehavior: Clip.hardEdge,
+      clipBehavior: Clip.none,
       children: [
         Positioned(
           top: -50,
@@ -138,7 +138,6 @@ class _SheetsScreenState extends State<SheetsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Stack(
-                      overflow: Overflow.visible,
                       clipBehavior: Clip.none,
                       children: [
                         Column(
@@ -207,19 +206,19 @@ class _SheetsScreenState extends State<SheetsScreen> {
         width: double.infinity,
         child: ElevatedButton(
           style: ButtonStyle(
-            padding: MaterialStateProperty.all<EdgeInsets>(
+            padding: WidgetStateProperty.all<EdgeInsets>(
               const EdgeInsets.all(32),
             ),
-            overlayColor: MaterialStateProperty.all<Color>(
+            overlayColor: WidgetStateProperty.all<Color>(
               const Color.fromRGBO(152, 90, 87, 0.2),
             ),
-            foregroundColor: MaterialStateProperty.all<Color>(
+            foregroundColor: WidgetStateProperty.all<Color>(
               const Color.fromRGBO(172, 25, 20, 1),
             ),
-            backgroundColor: MaterialStateProperty.all<Color>(
+            backgroundColor: WidgetStateProperty.all<Color>(
               Colors.white,
             ),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(38.0),
                 side: const BorderSide(
@@ -292,7 +291,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
                     padding: const EdgeInsets.all(8),
                     child: TextButton(
                       style: ButtonStyle(
-                        foregroundColor: MaterialStateProperty.all<Color>(
+                        foregroundColor: WidgetStateProperty.all<Color>(
                           Colors.white,
                         ),
                       ),
@@ -374,7 +373,15 @@ class _SheetsScreenState extends State<SheetsScreen> {
                         child: const Icon(Icons.delete),
                       ),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  PlayScreen(sheet: selectedItem!),
+                            ),
+                          );
+                        },
                         child: Text("Jogar como ${selectedItem?.name}"),
                       )
                     ],
