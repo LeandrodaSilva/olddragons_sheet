@@ -68,31 +68,23 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
 
   Future<void> signInWithGoogle() async {
     try {
-      UserCredential userCredential;
-      if (!kIsWeb) {
-        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-        final GoogleSignInAuthentication? googleAuth =
-            await googleUser?.authentication;
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth?.accessToken,
-          idToken: googleAuth?.idToken,
-        );
-        userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-      } else {
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        userCredential =
-            await FirebaseAuth.instance.signInWithPopup(googleProvider);
-      }
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
 
-      final user = userCredential.user;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Logado ${user?.uid} com Google'),
-      ));
-    } catch (e) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e, stackTrace) {
+      debugPrint('Google Sign-In Error: $e');
+      debugPrint('Stack: $stackTrace');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Falha no login com Google: $e'),
+          content: Text('Erro: ${e.runtimeType} - $e'),
+          duration: const Duration(seconds: 10),
         ),
       );
     }
@@ -150,81 +142,11 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                           width: 100,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8.0,
-                        ),
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            hintText: 'E-mail',
-                          ),
-                          initialValue: email,
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Insira o seu e-mail';
-                            }
-                            return null;
-                          },
-                          onChanged: (String? val) {
-                            setState(() {
-                              email = val ?? "";
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8.0,
-                        ),
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            hintText: 'Senha',
-                          ),
-                          initialValue: password,
-                          obscureText: true,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Insira a sua senha';
-                            }
-                            return null;
-                          },
-                          onChanged: (String? val) {
-                            setState(() {
-                              password = val ?? "";
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16.0,
-                        ),
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _validateForm,
-                          child: const Text('Logar'),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 16.0,
-                        ),
-                        child: Text("OU"),
-                      ),
+                      const SizedBox(height: 16),
                       SignInButton(
                         Buttons.Google,
                         text: "Logar com Google",
                         onPressed: signInWithGoogle,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16.0,
-                        ),
-                        child: ElevatedButton(
-                          onPressed: signInAnonymously,
-                          child: const Text('Entrar como Convidado'),
-                        ),
                       ),
                     ],
                   ),
