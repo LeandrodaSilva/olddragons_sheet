@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ods/controllers/character_controller.dart';
@@ -30,6 +33,8 @@ class _PlayScreenState extends State<PlayScreen> {
   String _filtroLoja = 'todos';
   late Sheet sheet;
   late InventoryController inventoryController;
+  StreamSubscription? _sheetSubscription;
+  bool _isSaving = false;
   final CharacterController _characterController = CharacterController();
   final ShopController _shopController = ShopController();
   final DiceController _diceController = DiceController();
@@ -39,11 +44,35 @@ class _PlayScreenState extends State<PlayScreen> {
     super.initState();
     sheet = widget.sheet;
     inventoryController = InventoryController(sheetId: sheet.id);
+    _listenToSheetChanges();
+  }
+
+  void _listenToSheetChanges() {
+    _sheetSubscription = FirebaseFirestore.instance
+        .collection('sheets')
+        .doc(sheet.id)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists || _isSaving) return;
+      final data = snapshot.data()!;
+      setState(() {
+        sheet = Sheet.fromMap(snapshot.id, data);
+      });
+    });
   }
 
   void _saveSheet() {
+    _isSaving = true;
     final sm = Provider.of<SheetModel>(context, listen: false);
     sm.add(sheet);
+    Future.delayed(const Duration(seconds: 1), () => _isSaving = false);
+  }
+
+  @override
+  void dispose() {
+    _sheetSubscription?.cancel();
+    inventoryController.dispose();
+    super.dispose();
   }
 
   @override
