@@ -62,67 +62,42 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
           ),
         ),
         child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Logo acima da moldura
-                Image(
-                  image: logo,
-                  width: 140,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'OldDragons Sheet',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black,
-                        blurRadius: 10,
-                        offset: Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Moldura com botão dentro
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Moldura
-                      Image(
-                        image: frame,
-                        fit: BoxFit.contain,
-                      ),
-                      // Conteúdo dentro da moldura
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 60, vertical: 50),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Sua ficha de RPG digital',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade300,
-                                shadows: const [
-                                  Shadow(
-                                    color: Colors.black,
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            SizedBox(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo acima da moldura
+              Image(
+                image: logo,
+                width: 160,
+              ),
+              // Moldura com fundo e botão dentro
+              Container(
+                constraints: const BoxConstraints(maxWidth: 520),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Moldura
+                    Image(
+                      image: frame,
+                      fit: BoxFit.contain,
+                      width: 520,
+                    ),
+                    // Fundo marrom + botão dentro da moldura
+                    Positioned.fill(
+                      left: 55,
+                      right: 55,
+                      top: 45,
+                      bottom: 55,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(40, 22, 10, 0.85),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: signInWithGoogle,
@@ -131,36 +106,40 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF4285F4),
+                                    color: Color(0xFFD4A855),
                                   ),
                                 ),
                                 label: const Text(
                                   'Entrar com Google',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Color(0xFF333333),
+                                    color: Color(0xFFE8D5B0),
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: const Color(0xFF333333),
+                                  backgroundColor:
+                                      const Color.fromRGBO(60, 30, 15, 0.9),
                                   padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
+                                      const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(6),
+                                    side: const BorderSide(
+                                      color: Color(0xFFD4A855),
+                                      width: 1.5,
+                                    ),
                                   ),
-                                  elevation: 4,
+                                  elevation: 0,
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
