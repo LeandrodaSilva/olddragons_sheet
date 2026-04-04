@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,22 +10,23 @@ import '../models/sheet_model.dart';
 class SheetModel extends ChangeNotifier {
   final List<Sheet> _items = [];
   late String _uid;
+  StreamSubscription? _subscription;
 
   SheetModel() {
     User? user = FirebaseAuth.instance.currentUser;
-    CollectionReference sheets =
-        FirebaseFirestore.instance.collection('sheets');
-
     _uid = user!.uid;
 
-    sheets.where("uid", isEqualTo: _uid).get().then((querySnapshots) {
-      if (querySnapshots.docs.isNotEmpty) {
-        for (var snapshot in querySnapshots.docs) {
-          Map<String, dynamic> data = snapshot.data()! as Map<String, dynamic>;
-          _items.add(Sheet.fromMap(snapshot.id, data));
-        }
-        notifyListeners();
+    _subscription = FirebaseFirestore.instance
+        .collection('sheets')
+        .where("uid", isEqualTo: _uid)
+        .snapshots()
+        .listen((querySnapshots) {
+      _items.clear();
+      for (var snapshot in querySnapshots.docs) {
+        Map<String, dynamic> data = snapshot.data();
+        _items.add(Sheet.fromMap(snapshot.id, data));
       }
+      notifyListeners();
     });
   }
 
@@ -38,17 +40,10 @@ class SheetModel extends ChangeNotifier {
       FirebaseFirestore.instance
           .collection('sheets')
           .doc(item.id)
-          .update(data)
-          .then((value) {
-        _items.remove(item);
-        _items.add(item);
-        notifyListeners();
-      });
+          .update(data);
     } else {
       FirebaseFirestore.instance.collection('sheets').add(data).then((value) {
         item.id = value.id;
-        _items.add(item);
-        notifyListeners();
       });
     }
   }
@@ -57,15 +52,17 @@ class SheetModel extends ChangeNotifier {
     FirebaseFirestore.instance
         .collection('sheets')
         .doc(item.id)
-        .delete()
-        .then((value) {
-      _items.remove(item);
-      notifyListeners();
-    });
+        .delete();
   }
 
   void removeAll() {
     _items.clear();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }

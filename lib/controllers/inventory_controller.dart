@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,9 +9,17 @@ import '../models/item_model.dart';
 class InventoryController extends ChangeNotifier {
   final List<Item> _items = [];
   final String sheetId;
+  StreamSubscription? _subscription;
 
   InventoryController({required this.sheetId}) {
-    loadItems();
+    _subscription = _collection.snapshots().listen((querySnapshots) {
+      _items.clear();
+      for (var snapshot in querySnapshots.docs) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        _items.add(Item.fromMap(snapshot.id, data));
+      }
+      notifyListeners();
+    });
   }
 
   UnmodifiableListView<Item> get items => UnmodifiableListView(_items);
@@ -23,37 +32,19 @@ class InventoryController extends ChangeNotifier {
   double get pesoTotal =>
       _items.fold(0.0, (total, item) => total + (item.peso * item.quantidade));
 
-  void loadItems() {
-    _collection.get().then((querySnapshots) {
-      _items.clear();
-      for (var snapshot in querySnapshots.docs) {
-        Map<String, dynamic> data = snapshot.data()! as Map<String, dynamic>;
-        _items.add(Item.fromMap(snapshot.id, data));
-      }
-      notifyListeners();
-    });
-  }
-
   void addItem(Item item) {
     _collection.add(item.toMap()).then((value) {
       item.id = value.id;
-      _items.add(item);
-      notifyListeners();
     });
   }
 
   void removeItem(Item item) {
-    _collection.doc(item.id).delete().then((_) {
-      _items.remove(item);
-      notifyListeners();
-    });
+    _collection.doc(item.id).delete();
   }
 
   void toggleEquipped(Item item) {
     item.equipado = !item.equipado;
-    _collection.doc(item.id).update({'equipado': item.equipado}).then((_) {
-      notifyListeners();
-    });
+    _collection.doc(item.id).update({'equipado': item.equipado});
   }
 
   void updateQuantity(Item item, int newQuantity) {
@@ -62,8 +53,12 @@ class InventoryController extends ChangeNotifier {
       return;
     }
     item.quantidade = newQuantity;
-    _collection.doc(item.id).update({'quantidade': newQuantity}).then((_) {
-      notifyListeners();
-    });
+    _collection.doc(item.id).update({'quantidade': newQuantity});
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
