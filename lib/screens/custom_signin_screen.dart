@@ -98,6 +98,16 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
     }
   }
 
+  Future<void> signInAnonymously() async {
+    try {
+      await FirebaseAuth.instance.signInAnonymously();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha no login como convidado: $e')),
+      );
+    }
+  }
+
   void _validateForm() {
     if (_formKey.currentState!.validate()) {
       doLogin();
@@ -206,6 +216,15 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                         Buttons.Google,
                         text: "Logar com Google",
                         onPressed: signInWithGoogle,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16.0,
+                        ),
+                        child: ElevatedButton(
+                          onPressed: signInAnonymously,
+                          child: const Text('Entrar como Convidado'),
+                        ),
                       ),
                     ],
                   ),

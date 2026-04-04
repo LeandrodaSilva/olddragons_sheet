@@ -29,21 +29,21 @@ class App extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
-            padding: MaterialStateProperty.all<EdgeInsets>(
+            padding: WidgetStateProperty.all<EdgeInsets>(
               const EdgeInsets.all(24),
             ),
-            backgroundColor: MaterialStateProperty.all<Color>(
+            backgroundColor: WidgetStateProperty.all<Color>(
               const Color.fromRGBO(172, 25, 20, 1),
             ),
-            overlayColor: MaterialStateProperty.all<Color>(
+            overlayColor: WidgetStateProperty.all<Color>(
               Colors.redAccent,
             ),
-            foregroundColor: MaterialStateProperty.all<Color>(
+            foregroundColor: WidgetStateProperty.all<Color>(
               Colors.white,
             ),
           ),
         ),
-        cardTheme: const CardTheme(elevation: 3),
+        cardTheme: const CardThemeData(elevation: 3),
       ),
       home: const AuthMiddleware(
         child: Layout(),

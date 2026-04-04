@@ -76,7 +76,7 @@ class _RaceDetailsCardState extends State<RaceDetailsCard> {
                 );
               },
               style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(38.0),
                     side: const BorderSide(
