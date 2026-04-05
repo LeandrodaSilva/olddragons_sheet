@@ -164,22 +164,28 @@ void main() {
     });
 
     group('pulse animation', () {
-      testWidgets('heart pulses when HP <= 25%', (tester) async {
+      testWidgets('heart is wrapped in ScaleTransition', (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 4, pvMax: 20));
 
-        // ScaleTransition should be present for the pulse
-        expect(find.byType(ScaleTransition), findsOneWidget);
+        // Find ScaleTransition that contains the heart icon
+        final heartScaleTransition = find.ancestor(
+          of: find.byIcon(Icons.favorite),
+          matching: find.byType(ScaleTransition),
+        );
+        expect(heartScaleTransition, findsOneWidget);
       });
 
-      testWidgets('heart does not pulse when HP > 25%', (tester) async {
+      testWidgets('heart scale is 1.0 when HP > 25% (no pulse)',
+          (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
 
-        // ScaleTransition is always present but animation should be stopped
-        final scaleTransition = tester.widget<ScaleTransition>(
-          find.byType(ScaleTransition),
+        final heartScaleTransition = tester.widget<ScaleTransition>(
+          find.ancestor(
+            of: find.byIcon(Icons.favorite),
+            matching: find.byType(ScaleTransition),
+          ),
         );
-        // When HP > 25%, the animation controller value should be 0
-        expect(scaleTransition.scale.value, 1.0);
+        expect(heartScaleTransition.scale.value, 1.0);
       });
     });
   });
