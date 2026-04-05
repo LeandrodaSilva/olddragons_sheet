@@ -16,7 +16,7 @@ void main() {
       return wrapWithMaterialApp(
         SizedBox(
           width: 120,
-          height: 120,
+          height: 180,
           child: AttributeCard(
             label: label,
             value: value,
@@ -57,13 +57,40 @@ void main() {
         await tester.pumpWidget(buildAttributeCard(value: 18));
         expect(find.text('+4'), findsOneWidget);
       });
+
+      testWidgets('shows +/- buttons', (tester) async {
+        await tester.pumpWidget(buildAttributeCard());
+
+        expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
+        expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+      });
+    });
+
+    group('+/- buttons', () {
+      testWidgets('+ button increments value by 1', (tester) async {
+        await tester.pumpWidget(buildAttributeCard(value: 14));
+
+        await tester.tap(find.byIcon(Icons.add_circle_outline));
+        await tester.pump();
+
+        expect(lastValue, 15);
+      });
+
+      testWidgets('- button decrements value by 1', (tester) async {
+        await tester.pumpWidget(buildAttributeCard(value: 14));
+
+        await tester.tap(find.byIcon(Icons.remove_circle_outline));
+        await tester.pump();
+
+        expect(lastValue, 13);
+      });
     });
 
     group('edit dialog', () {
-      testWidgets('tapping card opens edit dialog', (tester) async {
+      testWidgets('tapping value opens edit dialog', (tester) async {
         await tester.pumpWidget(buildAttributeCard(label: 'FOR', value: 14));
 
-        await tester.tap(find.byType(InkWell));
+        await tester.tap(find.text('14'));
         await tester.pumpAndSettle();
 
         expect(find.text('FOR'), findsWidgets); // label in card + dialog title
@@ -74,7 +101,7 @@ void main() {
       testWidgets('dialog pre-fills current value', (tester) async {
         await tester.pumpWidget(buildAttributeCard(value: 14));
 
-        await tester.tap(find.byType(InkWell));
+        await tester.tap(find.text('14'));
         await tester.pumpAndSettle();
 
         final textField = tester.widget<TextField>(find.byType(TextField));
@@ -84,7 +111,7 @@ void main() {
       testWidgets('Salvar calls onChanged with new value', (tester) async {
         await tester.pumpWidget(buildAttributeCard(value: 14));
 
-        await tester.tap(find.byType(InkWell));
+        await tester.tap(find.text('14'));
         await tester.pumpAndSettle();
 
         await tester.enterText(find.byType(TextField), '18');
@@ -97,7 +124,7 @@ void main() {
       testWidgets('Cancelar does not call onChanged', (tester) async {
         await tester.pumpWidget(buildAttributeCard(value: 14));
 
-        await tester.tap(find.byType(InkWell));
+        await tester.tap(find.text('14'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Cancelar'));
@@ -109,7 +136,7 @@ void main() {
       testWidgets('empty input falls back to current value', (tester) async {
         await tester.pumpWidget(buildAttributeCard(value: 14));
 
-        await tester.tap(find.byType(InkWell));
+        await tester.tap(find.text('14'));
         await tester.pumpAndSettle();
 
         await tester.enterText(find.byType(TextField), '');
