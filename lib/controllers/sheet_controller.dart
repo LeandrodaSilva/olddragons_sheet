@@ -32,19 +32,19 @@ class SheetModel extends ChangeNotifier {
 
   UnmodifiableListView<Sheet> get items => UnmodifiableListView(_items);
 
-  void add(Sheet item) {
+  Future<void> add(Sheet item) async {
     final data = item.toMap();
     data['uid'] = _uid;
 
     if (item.id.isNotEmpty) {
-      FirebaseFirestore.instance
+      await FirebaseFirestore.instance
           .collection('sheets')
           .doc(item.id)
           .update(data);
     } else {
-      FirebaseFirestore.instance.collection('sheets').add(data).then((value) {
-        item.id = value.id;
-      });
+      final value =
+          await FirebaseFirestore.instance.collection('sheets').add(data);
+      item.id = value.id;
     }
   }
 
