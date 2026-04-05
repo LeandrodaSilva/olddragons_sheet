@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/sheet_controller.dart';
 import 'package:provider/provider.dart';
 import '../models/sheet_model.dart';
@@ -73,7 +74,7 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Color.fromRGBO(172, 25, 20, 1))),
+                                      color: AppColors.primary)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 decoration: const InputDecoration(
@@ -184,7 +185,7 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Color.fromRGBO(172, 25, 20, 1))),
+                                      color: AppColors.primary)),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
@@ -309,14 +310,14 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                 style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Color.fromRGBO(172, 25, 20, 1))),
+                    color: AppColors.primary)),
             Text("$value",
                 style:
                     const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
-                color: const Color.fromRGBO(172, 25, 20, 1),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(modStr,

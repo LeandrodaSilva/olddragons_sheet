@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 
 import '../controllers/dice_controller.dart';
 import '../models/sheet_model.dart';
@@ -94,7 +95,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
                 style: const TextStyle(
                   fontSize: 64,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromRGBO(172, 25, 20, 1),
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -142,7 +143,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
       onPressed: () => _rolarDado(lados),
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(
-          const Color.fromRGBO(172, 25, 20, 1),
+          AppColors.primary,
         ),
         foregroundColor: WidgetStateProperty.all(Colors.white),
         shape: WidgetStateProperty.all(
@@ -170,7 +171,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
             style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color.fromRGBO(172, 25, 20, 1))),
+                color: AppColors.primary)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -229,8 +230,8 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
       icon: Icon(icon, size: 18),
       label: Text(label, style: const TextStyle(fontSize: 13)),
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color.fromRGBO(172, 25, 20, 1),
-        side: const BorderSide(color: Color.fromRGBO(172, 25, 20, 0.5)),
+        foregroundColor: AppColors.primary,
+        side: const BorderSide(color: AppColors.primaryHalf),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
@@ -245,7 +246,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
             style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color.fromRGBO(172, 25, 20, 1))),
+                color: AppColors.primary)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -292,7 +293,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
             style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color.fromRGBO(172, 25, 20, 1))),
+                color: AppColors.primary)),
         const SizedBox(height: 8),
         ...historico.map((r) => Padding(
               padding: const EdgeInsets.only(bottom: 4),

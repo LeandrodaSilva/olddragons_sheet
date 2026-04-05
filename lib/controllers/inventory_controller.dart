@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/firestore_constants.dart';
 import '../models/item_model.dart';
 
 class InventoryController extends ChangeNotifier {
@@ -21,41 +22,62 @@ class InventoryController extends ChangeNotifier {
         _items.add(Item.fromMap(snapshot.id, data));
       }
       notifyListeners();
+    }, onError: (error) {
+      debugPrint('InventoryController stream error: $error');
     });
   }
 
   UnmodifiableListView<Item> get items => UnmodifiableListView(_items);
 
   CollectionReference get _collection => _firestore
-      .collection('sheets')
+      .collection(FirestoreConstants.sheetsCollection)
       .doc(sheetId)
-      .collection('items');
+      .collection(FirestoreConstants.itemsSubcollection);
 
   double get pesoTotal =>
       _items.fold(0.0, (total, item) => total + (item.peso * item.quantidade));
 
-  void addItem(Item item) {
-    _collection.add(item.toMap()).then((value) {
+  Future<void> addItem(Item item) async {
+    try {
+      final value = await _collection.add(item.toMap());
       item.id = value.id;
-    });
-  }
-
-  void removeItem(Item item) {
-    _collection.doc(item.id).delete();
-  }
-
-  void toggleEquipped(Item item) {
-    item.equipado = !item.equipado;
-    _collection.doc(item.id).update({'equipado': item.equipado});
-  }
-
-  void updateQuantity(Item item, int newQuantity) {
-    if (newQuantity <= 0) {
-      removeItem(item);
-      return;
+    } catch (e) {
+      debugPrint('InventoryController addItem error: $e');
+      rethrow;
     }
-    item.quantidade = newQuantity;
-    _collection.doc(item.id).update({'quantidade': newQuantity});
+  }
+
+  Future<void> removeItem(Item item) async {
+    try {
+      await _collection.doc(item.id).delete();
+    } catch (e) {
+      debugPrint('InventoryController removeItem error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> toggleEquipped(Item item) async {
+    try {
+      item.equipado = !item.equipado;
+      await _collection.doc(item.id).update({'equipado': item.equipado});
+    } catch (e) {
+      debugPrint('InventoryController toggleEquipped error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateQuantity(Item item, int newQuantity) async {
+    try {
+      if (newQuantity <= 0) {
+        await removeItem(item);
+        return;
+      }
+      item.quantidade = newQuantity;
+      await _collection.doc(item.id).update({'quantidade': newQuantity});
+    } catch (e) {
+      debugPrint('InventoryController updateQuantity error: $e');
+      rethrow;
+    }
   }
 
   @override

@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
 import 'package:ods/screens/play_screen.dart';
@@ -70,14 +71,6 @@ class _SheetsScreenState extends State<SheetsScreen> {
                 selectedItem = sheet;
               });
             }
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => AddSheetScreen(
-            //       item: sheet,
-            //     ),
-            //   ),
-            // );
           },
           onLongPress: () async {
             return showDialog<void>(
@@ -119,13 +112,13 @@ class _SheetsScreenState extends State<SheetsScreen> {
               child: Card(
                 elevation: index == selectedCard ? 10 : 1,
                 shadowColor: index == selectedCard
-                    ? const Color.fromRGBO(172, 25, 20, 1)
+                    ? AppColors.primary
                     : Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(38.0),
                   side: const BorderSide(
                     style: BorderStyle.none,
-                    color: Color.fromRGBO(172, 25, 20, 1),
+                    color: AppColors.primary,
                     width: 2,
                   ),
                 ),
@@ -213,7 +206,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
               const Color.fromRGBO(152, 90, 87, 0.2),
             ),
             foregroundColor: WidgetStateProperty.all<Color>(
-              const Color.fromRGBO(172, 25, 20, 1),
+              AppColors.primary,
             ),
             backgroundColor: WidgetStateProperty.all<Color>(
               Colors.white,
@@ -222,7 +215,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(38.0),
                 side: const BorderSide(
-                  color: Color.fromRGBO(172, 25, 20, 1),
+                  color: AppColors.primary,
                   width: 2,
                 ),
               ),
@@ -233,18 +226,6 @@ class _SheetsScreenState extends State<SheetsScreen> {
             size: 50,
           ),
           onPressed: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => AddSheetScreen(
-            //       item: Item(),
-            //     ),
-            //   ),
-            // );
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => const RaceScreen()),
-            // );
             Navigator.push(
               context,
               MaterialPageRoute(

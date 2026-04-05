@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/models/character_model.dart';
 import 'package:ods/screens/class_selection_screen.dart';
@@ -80,7 +81,7 @@ class _RaceDetailsCardState extends State<RaceDetailsCard> {
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(38.0),
                     side: const BorderSide(
-                      color: Color.fromRGBO(172, 25, 20, 1),
+                      color: AppColors.primary,
                       width: 2,
                     ),
                   ),

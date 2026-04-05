@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/models/character_model.dart';
 import 'package:ods/screens/race_details_screen.dart';
@@ -116,7 +117,7 @@ class _RaceSelectionScreenState extends State<RaceSelectionScreen> {
                 style: const TextStyle(
                   fontSize: 28.0,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromRGBO(172, 25, 20, 1),
+                  color: AppColors.primary,
                 ),
               ),
             )

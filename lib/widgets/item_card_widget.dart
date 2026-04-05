@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 
 import '../models/item_model.dart';
 
@@ -48,18 +49,18 @@ class ItemCard extends StatelessWidget {
       child: Card(
         elevation: item.equipado ? 6 : 2,
         shadowColor: item.equipado
-            ? const Color.fromRGBO(172, 25, 20, 0.5)
+            ? AppColors.primaryHalf
             : Colors.black26,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: item.equipado
-              ? const BorderSide(color: Color.fromRGBO(172, 25, 20, 1), width: 2)
+              ? const BorderSide(color: AppColors.primary, width: 2)
               : BorderSide.none,
         ),
         child: ListTile(
           leading: CircleAvatar(
             backgroundColor: item.equipado
-                ? const Color.fromRGBO(172, 25, 20, 1)
+                ? AppColors.primary
                 : Colors.grey[300],
             child: Icon(
               _iconForTipo(item.tipo),
@@ -109,7 +110,7 @@ class ItemCard extends StatelessWidget {
                   icon: Icon(
                     item.equipado ? Icons.check_circle : Icons.circle_outlined,
                     color: item.equipado
-                        ? const Color.fromRGBO(172, 25, 20, 1)
+                        ? AppColors.primary
                         : Colors.grey,
                   ),
                   onPressed: onToggleEquip,

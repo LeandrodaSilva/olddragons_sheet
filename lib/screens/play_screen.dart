@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ods/constants/app_colors.dart';
+import 'package:ods/constants/firestore_constants.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
@@ -49,16 +51,21 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _listenToSheetChanges() {
     _sheetSubscription = FirebaseFirestore.instance
-        .collection('sheets')
+        .collection(FirestoreConstants.sheetsCollection)
         .doc(sheet.id)
         .snapshots()
-        .listen((snapshot) {
-      if (!snapshot.exists || _isSaving) return;
-      final data = snapshot.data()!;
-      setState(() {
-        sheet = Sheet.fromMap(snapshot.id, data);
-      });
-    });
+        .listen(
+      (snapshot) {
+        if (!snapshot.exists || _isSaving) return;
+        final data = snapshot.data()!;
+        setState(() {
+          sheet = Sheet.fromMap(snapshot.id, data);
+        });
+      },
+      onError: (error) {
+        debugPrint('PlayScreen sheet stream error: $error');
+      },
+    );
   }
 
   Future<void> _saveSheet() async {
@@ -94,7 +101,7 @@ class _PlayScreenState extends State<PlayScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentTab,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color.fromRGBO(172, 25, 20, 1),
+        selectedItemColor: AppColors.primary,
         onTap: (index) => setState(() => _currentTab = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Ficha"),
@@ -126,7 +133,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(172, 25, 20, 1))),
+                      color: AppColors.primary)),
               const SizedBox(height: 8),
               _buildAtributosGrid(),
               const SizedBox(height: 16),
@@ -136,7 +143,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(172, 25, 20, 1))),
+                      color: AppColors.primary)),
               const SizedBox(height: 8),
               _buildStatsRow(),
               const SizedBox(height: 16),
@@ -164,7 +171,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(172, 25, 20, 1))),
+                      color: AppColors.primary)),
               const SizedBox(height: 8),
               _buildDinheiroRow(),
               const SizedBox(height: 16),
@@ -178,7 +185,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(172, 25, 20, 1))),
+                      color: AppColors.primary)),
               const SizedBox(height: 8),
               _buildNotasField(),
               const SizedBox(height: 32),
@@ -396,7 +403,7 @@ class _PlayScreenState extends State<PlayScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.star,
-                  color: Color.fromRGBO(172, 25, 20, 1), size: 20),
+                  color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               const Text("XP: ",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -444,7 +451,7 @@ class _PlayScreenState extends State<PlayScreen> {
           child: Row(
             children: [
               const Icon(Icons.monetization_on,
-                  color: Color.fromRGBO(172, 25, 20, 1)),
+                  color: AppColors.primary),
               const SizedBox(width: 8),
               Text("${sheet.ouro} PO",
                   style: const TextStyle(
@@ -496,7 +503,7 @@ class _PlayScreenState extends State<PlayScreen> {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      selectedColor: const Color.fromRGBO(172, 25, 20, 0.2),
+      selectedColor: AppColors.primarySubtle,
       onSelected: (_) => setState(() => _filtroLoja = filtro),
     );
   }

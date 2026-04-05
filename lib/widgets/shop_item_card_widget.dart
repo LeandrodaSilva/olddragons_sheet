@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 
 import '../models/item_model.dart';
 
@@ -75,7 +76,7 @@ class ShopItemCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromRGBO(172, 25, 20, 1))),
+                        color: AppColors.primary)),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: canBuy ? onBuy : null,
