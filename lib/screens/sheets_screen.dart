@@ -1,12 +1,12 @@
 import 'dart:collection';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
 import 'package:ods/screens/play_screen.dart';
 import 'package:ods/screens/race_selection_screen.dart';
+import 'package:ods/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 import '../models/sheet_model.dart';
@@ -22,7 +22,7 @@ class SheetsScreen extends StatefulWidget {
 
 class _SheetsScreenState extends State<SheetsScreen> {
   late UnmodifiableListView<Sheet> sheets;
-  late SheetModel sm;
+  late SheetController sm;
   bool loading = false;
   int selectedCard = -1;
   Sheet? selectedItem;
@@ -31,7 +31,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
   final CharacterController characterController = CharacterController();
 
   _SheetsScreenState() {
-    sm = SheetModel();
+    sm = SheetController();
     sheets = sm.items;
   }
 
@@ -53,7 +53,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
     );
   }
 
-  _buildCards(SheetModel sm) {
+  _buildCards(SheetController sm) {
     List<Widget> cards = [];
     for (var sheet in sm.items) {
       var index = sm.items.indexOf(sheet);
@@ -242,7 +242,7 @@ class _SheetsScreenState extends State<SheetsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SheetModel>(
+    return Consumer<SheetController>(
       builder: (context, sm, child) {
         return Scaffold(
           body: CustomScrollView(
@@ -277,7 +277,8 @@ class _SheetsScreenState extends State<SheetsScreen> {
                         ),
                       ),
                       onPressed: () async {
-                        await FirebaseAuth.instance.signOut();
+                        final authService = Provider.of<AuthService>(context, listen: false);
+                        await authService.signOut();
                       },
                       child: const Icon(Icons.logout),
                     ),

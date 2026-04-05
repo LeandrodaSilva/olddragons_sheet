@@ -1,16 +1,14 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ods/constants/app_colors.dart';
-import 'package:ods/constants/firestore_constants.dart';
 import 'package:ods/controllers/character_controller.dart';
 import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
 import 'package:ods/controllers/inventory_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
 import 'package:ods/widgets/attribute_card_widget.dart';
+import 'package:ods/widgets/edit_value_dialog.dart';
 import 'package:ods/widgets/pv_bar_widget.dart';
 import 'package:ods/widgets/stat_card_widget.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +32,6 @@ class _PlayScreenState extends State<PlayScreen> {
   int _currentTab = 0;
   String _filtroLoja = 'todos';
   late Sheet sheet;
-  late InventoryController inventoryController;
   StreamSubscription? _sheetSubscription;
   bool _isSaving = false;
   final CharacterController _characterController = CharacterController();
@@ -45,42 +42,33 @@ class _PlayScreenState extends State<PlayScreen> {
   void initState() {
     super.initState();
     sheet = widget.sheet;
-    inventoryController = InventoryController(sheetId: sheet.id);
-    _listenToSheetChanges();
-  }
-
-  void _listenToSheetChanges() {
-    _sheetSubscription = FirebaseFirestore.instance
-        .collection(FirestoreConstants.sheetsCollection)
-        .doc(sheet.id)
-        .snapshots()
-        .listen(
-      (snapshot) {
-        if (!snapshot.exists || _isSaving) return;
-        final data = snapshot.data()!;
+    final sc = Provider.of<SheetController>(context, listen: false);
+    _sheetSubscription = sc.listenToSheet(
+      sheet.id,
+      onData: (updatedSheet) {
+        if (_isSaving) return;
         setState(() {
-          sheet = Sheet.fromMap(snapshot.id, data);
+          sheet = updatedSheet;
         });
-      },
-      onError: (error) {
-        debugPrint('PlayScreen sheet stream error: $error');
       },
     );
   }
 
   Future<void> _saveSheet() async {
     _isSaving = true;
-    final sm = Provider.of<SheetModel>(context, listen: false);
-    await sm.add(sheet);
+    final sc = Provider.of<SheetController>(context, listen: false);
+    await sc.add(sheet);
     if (mounted) {
       _isSaving = false;
     }
   }
 
+  InventoryController get _inventoryController =>
+      Provider.of<InventoryController>(context, listen: false);
+
   @override
   void dispose() {
     _sheetSubscription?.cancel();
-    inventoryController.dispose();
     super.dispose();
   }
 
@@ -93,7 +81,9 @@ class _PlayScreenState extends State<PlayScreen> {
       DiceRollerWidget(diceController: _diceController, sheet: sheet),
     ];
 
-    return Scaffold(
+    return ChangeNotifierProvider(
+      create: (_) => InventoryController(sheetId: sheet.id),
+      child: Scaffold(
       appBar: AppBar(
         title: Text("${sheet.name} — Nv.${sheet.level}"),
       ),
@@ -109,6 +99,7 @@ class _PlayScreenState extends State<PlayScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.store), label: "Loja"),
           BottomNavigationBarItem(icon: Icon(Icons.casino), label: "Dados"),
         ],
+      ),
       ),
     );
   }
@@ -373,7 +364,10 @@ class _PlayScreenState extends State<PlayScreen> {
   Widget _buildMoeda(String label, int value, ValueChanged<int> onChanged) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => _editNumber(label, value, onChanged),
+        onTap: () async {
+          final newVal = await showEditValueDialog(context, title: label, currentValue: value);
+          if (newVal != null) onChanged(newVal);
+        },
         child: Column(
           children: [
             Text("$value",
@@ -393,10 +387,13 @@ class _PlayScreenState extends State<PlayScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _editNumber("XP", sheet.xpAtual, (v) {
-          setState(() => sheet.xpAtual = v);
-          _saveSheet();
-        }),
+        onTap: () async {
+          final newVal = await showEditValueDialog(context, title: "XP", currentValue: sheet.xpAtual);
+          if (newVal != null) {
+            setState(() => sheet.xpAtual = newVal);
+            _saveSheet();
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -539,7 +536,7 @@ class _PlayScreenState extends State<PlayScreen> {
       peso: shopItem.peso,
     );
 
-    inventoryController.addItem(copia);
+    _inventoryController.addItem(copia);
     _saveSheet();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -550,9 +547,8 @@ class _PlayScreenState extends State<PlayScreen> {
   // === ABA INVENTÁRIO ===
 
   Widget _buildInventarioTab() {
-    return ListenableBuilder(
-      listenable: inventoryController,
-      builder: (context, _) {
+    return Consumer<InventoryController>(
+      builder: (context, inventoryController, _) {
         final items = inventoryController.items;
         return Column(
           children: [
@@ -667,7 +663,7 @@ class _PlayScreenState extends State<PlayScreen> {
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
-                inventoryController.addItem(Item(
+                _inventoryController.addItem(Item(
                   nome: nome,
                   tipo: tipo,
                   peso: peso,
@@ -682,32 +678,4 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
-  void _editNumber(String title, int current, ValueChanged<int> onSave) {
-    final controller = TextEditingController(text: "$current");
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: () {
-              onSave(int.tryParse(controller.text) ?? current);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text("Salvar"),
-          ),
-        ],
-      ),
-    );
-  }
 }

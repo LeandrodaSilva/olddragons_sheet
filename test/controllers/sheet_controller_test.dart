@@ -22,30 +22,30 @@ class FakeUser extends Fake implements User {
 }
 
 void main() {
-  group('SheetModel (SheetController)', () {
+  group('SheetController (SheetController)', () {
     late FakeFirebaseFirestore fakeFirestore;
     late FakeFirebaseAuth fakeAuth;
-    late SheetModel sheetModel;
+    late SheetController sheetController;
 
     setUp(() async {
       fakeFirestore = FakeFirebaseFirestore();
       fakeAuth = FakeFirebaseAuth(uid: 'user-123');
-      sheetModel = SheetModel(firestore: fakeFirestore, auth: fakeAuth);
+      sheetController = SheetController(firestore: fakeFirestore, auth: fakeAuth);
       await Future.delayed(Duration.zero);
     });
 
     tearDown(() {
-      sheetModel.dispose();
+      sheetController.dispose();
     });
 
     group('items', () {
       test('starts with empty list', () {
-        expect(sheetModel.items, isEmpty);
+        expect(sheetController.items, isEmpty);
       });
 
       test('items is unmodifiable', () {
         expect(
-          () => sheetModel.items.add(Sheet(name: 'test')),
+          () => sheetController.items.add(Sheet(name: 'test')),
           throwsA(isA<UnsupportedError>()),
         );
       });
@@ -55,7 +55,7 @@ void main() {
       test('creates new document when id is empty', () async {
         final sheet = Sheet(name: 'New Hero', race: 'Humano');
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         expect(sheet.id, isNotEmpty);
@@ -68,7 +68,7 @@ void main() {
       test('injects uid into document data', () async {
         final sheet = Sheet(name: 'Hero');
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final snapshot = await fakeFirestore.collection('sheets').get();
@@ -86,7 +86,7 @@ void main() {
         await Future.delayed(Duration.zero);
 
         final sheet = Sheet(id: docRef.id, name: 'New Name', race: 'Elfo');
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
 
         await Future.delayed(Duration.zero);
 
@@ -106,7 +106,7 @@ void main() {
         await Future.delayed(Duration.zero);
 
         final sheet = Sheet(id: docRef.id, name: 'To Delete');
-        sheetModel.delete(sheet);
+        sheetController.delete(sheet);
 
         await Future.delayed(Duration.zero);
 
@@ -125,8 +125,8 @@ void main() {
 
         await Future.delayed(Duration.zero);
 
-        sheetModel.removeAll();
-        expect(sheetModel.items, isEmpty);
+        sheetController.removeAll();
+        expect(sheetController.items, isEmpty);
       });
     });
 
@@ -146,9 +146,79 @@ void main() {
         await Future.delayed(Duration.zero);
 
         // Only sheets with matching uid should appear
-        final names = sheetModel.items.map((s) => s.name).toList();
+        final names = sheetController.items.map((s) => s.name).toList();
         expect(names, contains('My Hero'));
         expect(names, isNot(contains('Not Mine')));
+      });
+    });
+
+    group('listenToSheet()', () {
+      test('receives sheet data when document exists', () async {
+        // Create a sheet in Firestore
+        final docRef = await fakeFirestore.collection('sheets').add({
+          'uid': 'user-123',
+          'name': 'My Hero',
+          'race': 'Humano',
+        });
+
+        Sheet? received;
+        final sub = sheetController.listenToSheet(
+          docRef.id,
+          onData: (sheet) => received = sheet,
+        );
+
+        await Future.delayed(Duration.zero);
+
+        expect(received, isNotNull);
+        expect(received!.name, 'My Hero');
+
+        sub.cancel();
+      });
+
+      test('receives updates when document changes', () async {
+        final docRef = await fakeFirestore.collection('sheets').add({
+          'uid': 'user-123',
+          'name': 'Old Name',
+        });
+
+        Sheet? received;
+        final sub = sheetController.listenToSheet(
+          docRef.id,
+          onData: (sheet) => received = sheet,
+        );
+
+        await Future.delayed(Duration.zero);
+        expect(received!.name, 'Old Name');
+
+        await docRef.update({'name': 'New Name'});
+        await Future.delayed(Duration.zero);
+
+        expect(received!.name, 'New Name');
+
+        sub.cancel();
+      });
+
+      test('subscription can be cancelled', () async {
+        final docRef = await fakeFirestore.collection('sheets').add({
+          'uid': 'user-123',
+          'name': 'Hero',
+        });
+
+        int callCount = 0;
+        final sub = sheetController.listenToSheet(
+          docRef.id,
+          onData: (_) => callCount++,
+        );
+
+        await Future.delayed(Duration.zero);
+        expect(callCount, 1);
+
+        sub.cancel();
+
+        await docRef.update({'name': 'Updated'});
+        await Future.delayed(Duration.zero);
+
+        expect(callCount, 1); // Should not increase after cancel
       });
     });
   });

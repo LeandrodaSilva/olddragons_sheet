@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
 import 'firebase_options.dart';
@@ -13,7 +14,8 @@ void main() {
         runApp(
           MultiProvider(
             providers: [
-              ChangeNotifierProvider(create: (context) => SheetModel()),
+              Provider(create: (_) => AuthService()),
+              ChangeNotifierProvider(create: (context) => SheetController()),
             ],
             child: const App(),
           ),

@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ods/constants/app_colors.dart';
+import 'package:ods/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
 class CustomSignInScreen extends StatelessWidget {
   const CustomSignInScreen({Key? key}) : super(key: key);
@@ -37,7 +39,8 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.signInWithCredential(credential);
     } catch (e, stackTrace) {
       debugPrint('Google Sign-In Error: $e');
       debugPrint('Stack: $stackTrace');

@@ -22,17 +22,17 @@ void main() {
   group('Integração Firebase — Mudança de valores na ficha', () {
     late FakeFirebaseFirestore fakeFirestore;
     late FakeFirebaseAuth fakeAuth;
-    late SheetModel sheetModel;
+    late SheetController sheetController;
 
     setUp(() async {
       fakeFirestore = FakeFirebaseFirestore();
       fakeAuth = FakeFirebaseAuth(uid: 'player-1');
-      sheetModel = SheetModel(firestore: fakeFirestore, auth: fakeAuth);
+      sheetController = SheetController(firestore: fakeFirestore, auth: fakeAuth);
       await Future.delayed(Duration.zero);
     });
 
     tearDown(() {
-      sheetModel.dispose();
+      sheetController.dispose();
     });
 
     /// Helper: cria uma ficha e retorna ela com o id preenchido pelo Firestore
@@ -73,7 +73,7 @@ void main() {
         cobre: cobre,
         xpAtual: xpAtual,
       );
-      await sheetModel.add(sheet);
+      await sheetController.add(sheet);
       await Future.delayed(Duration.zero);
       return sheet;
     }
@@ -97,12 +97,12 @@ void main() {
         expect(data['uid'], 'player-1');
       });
 
-      test('ficha aparece na lista do SheetModel após criação', () async {
+      test('ficha aparece na lista do SheetController após criação', () async {
         await criarFicha(name: 'Legolas');
         await Future.delayed(Duration.zero);
 
-        expect(sheetModel.items.length, 1);
-        expect(sheetModel.items.first.name, 'Legolas');
+        expect(sheetController.items.length, 1);
+        expect(sheetController.items.first.name, 'Legolas');
       });
 
       test('múltiplas fichas são listadas corretamente', () async {
@@ -111,8 +111,8 @@ void main() {
         await criarFicha(name: 'Gimli');
         await Future.delayed(Duration.zero);
 
-        expect(sheetModel.items.length, 3);
-        final nomes = sheetModel.items.map((s) => s.name).toSet();
+        expect(sheetController.items.length, 3);
+        final nomes = sheetController.items.map((s) => s.name).toSet();
         expect(nomes, containsAll(['Aragorn', 'Legolas', 'Gimli']));
       });
     });
@@ -122,7 +122,7 @@ void main() {
         final sheet = await criarFicha(forca: 14);
 
         sheet.forca = 18;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -133,7 +133,7 @@ void main() {
         final sheet = await criarFicha(destreza: 12);
 
         sheet.destreza = 16;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -144,7 +144,7 @@ void main() {
         final sheet = await criarFicha(constituicao: 10);
 
         sheet.constituicao = 14;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -160,7 +160,7 @@ void main() {
         sheet.inteligencia = 12;
         sheet.sabedoria = 15;
         sheet.carisma = 8;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -179,7 +179,7 @@ void main() {
         sheet.forca = 18;
         expect(Sheet.modificador(sheet.forca), 4);
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -193,7 +193,7 @@ void main() {
         final sheet = await criarFicha(pvMax: 30, pvAtual: 30);
 
         sheet.pvAtual = 25;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -205,7 +205,7 @@ void main() {
         final sheet = await criarFicha(pvMax: 30, pvAtual: 15);
 
         sheet.pvAtual = 20;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -216,7 +216,7 @@ void main() {
         final sheet = await criarFicha(pvMax: 30, pvAtual: 30);
 
         sheet.pvMax = 40;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -227,7 +227,7 @@ void main() {
         final sheet = await criarFicha(pvMax: 30, pvAtual: 5);
 
         sheet.pvAtual = 0;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -241,7 +241,7 @@ void main() {
         sheet.pvAtual = (sheet.pvAtual - 5).clamp(0, sheet.pvMax);
         expect(sheet.pvAtual, 0);
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -255,7 +255,7 @@ void main() {
         sheet.pvAtual = (sheet.pvAtual + 5).clamp(0, sheet.pvMax);
         expect(sheet.pvAtual, 30);
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -272,7 +272,7 @@ void main() {
         }
         expect(sheet.pvAtual, 20);
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -286,7 +286,7 @@ void main() {
         final sheet = await criarFicha(ca: 14);
 
         sheet.ca = 18;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -297,7 +297,7 @@ void main() {
         final sheet = await criarFicha(jp: 13);
 
         sheet.jp = 10;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -308,7 +308,7 @@ void main() {
         final sheet = await criarFicha(ba: 2);
 
         sheet.ba = 5;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -319,7 +319,7 @@ void main() {
         final sheet = await criarFicha(movimento: 9);
 
         sheet.movimento = 6;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -333,7 +333,7 @@ void main() {
         sheet.jp = 8;
         sheet.ba = 7;
         sheet.movimento = 12;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -349,7 +349,7 @@ void main() {
         final sheet = await criarFicha(ouro: 100);
 
         sheet.ouro = 75;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -360,7 +360,7 @@ void main() {
         final sheet = await criarFicha(prata: 50);
 
         sheet.prata = 30;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -371,7 +371,7 @@ void main() {
         final sheet = await criarFicha(cobre: 200);
 
         sheet.cobre = 150;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -386,7 +386,7 @@ void main() {
         sheet.ouro = 200;
         sheet.prata = 80;
         sheet.cobre = 500;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -401,7 +401,7 @@ void main() {
         final sheet = await criarFicha(ouro: 10);
 
         sheet.ouro = 0;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -414,7 +414,7 @@ void main() {
         final sheet = await criarFicha(xpAtual: 3000);
 
         sheet.xpAtual = 5500;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -432,7 +432,7 @@ void main() {
         final sheet = await criarFicha(xpAtual: 0);
 
         sheet.xpAtual = 999999;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -445,7 +445,7 @@ void main() {
         final sheet = await criarFicha();
 
         sheet.notas = 'Encontrou o anel mágico na caverna';
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -456,7 +456,7 @@ void main() {
         final sheet = await criarFicha();
 
         sheet.notas = 'Sessão 1:\n- Derrotou o goblin\n- Ganhou 50 PO\n\nSessão 2:\n- Explorou a masmorra';
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -467,11 +467,11 @@ void main() {
       test('notas podem ser limpas', () async {
         final sheet = await criarFicha();
         sheet.notas = 'Texto inicial';
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         sheet.notas = '';
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -485,7 +485,7 @@ void main() {
 
         // Turno 1: personagem leva 8 de dano
         sheet.pvAtual = (sheet.pvAtual - 8).clamp(0, sheet.pvMax);
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         var data = await lerDadosFichaFirestore(sheet.id);
@@ -494,7 +494,7 @@ void main() {
         // Turno 2: usa poção (gasta 25 PO, cura 10 PV)
         sheet.ouro -= 25;
         sheet.pvAtual = (sheet.pvAtual + 10).clamp(0, sheet.pvMax);
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         data = await lerDadosFichaFirestore(sheet.id);
@@ -503,7 +503,7 @@ void main() {
 
         // Turno 3: leva dano crítico de 15
         sheet.pvAtual = (sheet.pvAtual - 15).clamp(0, sheet.pvMax);
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         data = await lerDadosFichaFirestore(sheet.id);
@@ -525,7 +525,7 @@ void main() {
         sheet.pvAtual = 38; // cura ao subir de nível
         sheet.xpAtual = 0; // XP consumido
         sheet.ba = 3; // BA melhora no nível 4
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -543,7 +543,7 @@ void main() {
         // Compra Cota de Malha (150 PO, +5 CA)
         sheet.ouro -= 150;
         sheet.ca = 10 + 5 + Sheet.modificador(sheet.destreza);
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final data = await lerDadosFichaFirestore(sheet.id);
@@ -553,7 +553,7 @@ void main() {
     });
 
     group('Sincronização em tempo real', () {
-      test('mudança externa no Firestore atualiza a lista do SheetModel',
+      test('mudança externa no Firestore atualiza a lista do SheetController',
           () async {
         final sheet = await criarFicha(name: 'Hero');
         await Future.delayed(Duration.zero);
@@ -565,26 +565,26 @@ void main() {
         });
         await Future.delayed(Duration.zero);
 
-        // O SheetModel deve refletir a mudança via snapshot listener
+        // O SheetController deve refletir a mudança via snapshot listener
         final updatedSheet =
-            sheetModel.items.firstWhere((s) => s.id == sheet.id);
+            sheetController.items.firstWhere((s) => s.id == sheet.id);
         expect(updatedSheet.forca, 20);
         expect(updatedSheet.pvAtual, 5);
       });
 
-      test('exclusão da ficha remove da lista do SheetModel', () async {
+      test('exclusão da ficha remove da lista do SheetController', () async {
         final sheet = await criarFicha(name: 'To Delete');
         await Future.delayed(Duration.zero);
-        expect(sheetModel.items.length, 1);
+        expect(sheetController.items.length, 1);
 
-        sheetModel.delete(sheet);
+        sheetController.delete(sheet);
         await Future.delayed(Duration.zero);
 
-        expect(sheetModel.items, isEmpty);
+        expect(sheetController.items, isEmpty);
       });
 
       test('fichas de outro jogador não aparecem na lista', () async {
-        // Cria ficha pelo SheetModel (uid = player-1)
+        // Cria ficha pelo SheetController (uid = player-1)
         await criarFicha(name: 'My Hero');
 
         // Insere diretamente ficha de outro jogador
@@ -595,7 +595,7 @@ void main() {
         });
         await Future.delayed(Duration.zero);
 
-        final nomes = sheetModel.items.map((s) => s.name).toList();
+        final nomes = sheetController.items.map((s) => s.name).toList();
         expect(nomes, contains('My Hero'));
         expect(nomes, isNot(contains('Enemy Hero')));
       });
@@ -632,7 +632,7 @@ void main() {
           notas: 'Mago especialista em fogo',
         );
 
-        await sheetModel.add(original);
+        await sheetController.add(original);
         await Future.delayed(Duration.zero);
 
         // Lê do Firestore bruto
