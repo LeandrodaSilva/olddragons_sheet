@@ -119,6 +119,28 @@ class _PlayScreenState extends State<PlayScreen> {
               _buildHeader(raceImg.img),
               const SizedBox(height: 16),
 
+              // === PV (VIDA) ===
+              PvBar(
+                pvAtual: sheet.pvAtual,
+                pvMax: sheet.pvMax,
+                onPvAtualChanged: (v) {
+                  setState(() => sheet.pvAtual = v);
+                  _saveSheet();
+                },
+                onPvMaxChanged: (v) {
+                  setState(() {
+                    sheet.pvMax = v;
+                    if (sheet.pvAtual > v) sheet.pvAtual = v;
+                  });
+                  _saveSheet();
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // === XP ===
+              _buildXpRow(),
+              const SizedBox(height: 16),
+
               // === ATRIBUTOS ===
               const Text("ATRIBUTOS",
                   style: TextStyle(
@@ -139,24 +161,6 @@ class _PlayScreenState extends State<PlayScreen> {
               _buildStatsRow(),
               const SizedBox(height: 16),
 
-              // === PV ===
-              PvBar(
-                pvAtual: sheet.pvAtual,
-                pvMax: sheet.pvMax,
-                onPvAtualChanged: (v) {
-                  setState(() => sheet.pvAtual = v);
-                  _saveSheet();
-                },
-                onPvMaxChanged: (v) {
-                  setState(() {
-                    sheet.pvMax = v;
-                    if (sheet.pvAtual > v) sheet.pvAtual = v;
-                  });
-                  _saveSheet();
-                },
-              ),
-              const SizedBox(height: 16),
-
               // === DINHEIRO ===
               const Text("DINHEIRO",
                   style: TextStyle(
@@ -165,10 +169,6 @@ class _PlayScreenState extends State<PlayScreen> {
                       color: AppColors.primary)),
               const SizedBox(height: 8),
               _buildDinheiroRow(),
-              const SizedBox(height: 16),
-
-              // === XP ===
-              _buildXpRow(),
               const SizedBox(height: 16),
 
               // === NOTAS ===
@@ -228,7 +228,7 @@ class _PlayScreenState extends State<PlayScreen> {
       crossAxisCount: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1,
+      childAspectRatio: 0.72,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       children: [
@@ -382,9 +382,19 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Widget _buildXpRow() {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF3A3A5C), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.goldAccent.withOpacity(0.2),
+            blurRadius: 8,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () async {
@@ -395,17 +405,28 @@ class _PlayScreenState extends State<PlayScreen> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.star,
-                  color: AppColors.primary, size: 20),
+              Icon(Icons.star,
+                  color: AppColors.goldAccent, size: 22,
+                  shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.5), blurRadius: 6)]),
               const SizedBox(width: 8),
-              const Text("XP: ",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text("XP",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withOpacity(0.7),
+                  )),
+              const SizedBox(width: 10),
               Text("${sheet.xpAtual}",
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.goldAccent,
+                    shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.3), blurRadius: 4)],
+                  )),
             ],
           ),
         ),

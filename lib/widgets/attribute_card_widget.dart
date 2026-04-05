@@ -29,47 +29,74 @@ class AttributeCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showEditDialog(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Label
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
               ),
-              const SizedBox(height: 4),
-              Text(
+            ),
+            // Botao diminuir
+            SizedBox(
+              height: 28,
+              width: 28,
+              child: IconButton(
+                onPressed: () => onChanged(value - 1),
+                icon: const Icon(Icons.remove_circle_outline),
+                iconSize: 18,
+                color: AppColors.primaryHalf,
+                padding: EdgeInsets.zero,
+                tooltip: "Diminuir $label",
+              ),
+            ),
+            // Valor (tappable para editar)
+            GestureDetector(
+              onTap: () => _showEditDialog(context),
+              child: Text(
                 "$value",
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  modStr,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+            ),
+            // Botao aumentar
+            SizedBox(
+              height: 28,
+              width: 28,
+              child: IconButton(
+                onPressed: () => onChanged(value + 1),
+                icon: const Icon(Icons.add_circle_outline),
+                iconSize: 18,
+                color: AppColors.primaryHalf,
+                padding: EdgeInsets.zero,
+                tooltip: "Aumentar $label",
+              ),
+            ),
+            // Badge modificador
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                modStr,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

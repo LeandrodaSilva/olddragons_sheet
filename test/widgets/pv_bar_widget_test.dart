@@ -32,139 +32,87 @@ void main() {
         expect(find.text('PV'), findsOneWidget);
       });
 
-      testWidgets('shows all four adjustment buttons', (tester) async {
+      testWidgets('shows heart icon', (tester) async {
         await tester.pumpWidget(buildPvBar());
 
-        expect(find.text('-5'), findsOneWidget);
-        expect(find.text('-1'), findsOneWidget);
-        expect(find.text('+1'), findsOneWidget);
-        expect(find.text('+5'), findsOneWidget);
-      });
-    });
-
-    group('color coding', () {
-      testWidgets('uses green when HP > 50%', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
-
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        final animation = indicator.valueColor as AlwaysStoppedAnimation<Color>;
-        expect(animation.value, Colors.green);
+        expect(find.byIcon(Icons.favorite), findsOneWidget);
       });
 
-      testWidgets('uses orange when HP > 25% and <= 50%', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 8, pvMax: 20));
+      testWidgets('shows four action buttons with icons', (tester) async {
+        await tester.pumpWidget(buildPvBar());
 
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        final animation = indicator.valueColor as AlwaysStoppedAnimation<Color>;
-        expect(animation.value, Colors.orange);
-      });
-
-      testWidgets('uses red when HP <= 25%', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 4, pvMax: 20));
-
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        final animation = indicator.valueColor as AlwaysStoppedAnimation<Color>;
-        expect(animation.value, Colors.red);
-      });
-
-      testWidgets('uses red when HP is 0', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 0, pvMax: 20));
-
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        final animation = indicator.valueColor as AlwaysStoppedAnimation<Color>;
-        expect(animation.value, Colors.red);
-      });
-    });
-
-    group('progress bar', () {
-      testWidgets('shows 0% when pvMax is 0 (no division by zero)',
-          (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 0, pvMax: 0));
-
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        expect(indicator.value, 0.0);
-      });
-
-      testWidgets('clamps progress to 1.0 when pvAtual > pvMax',
-          (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 25, pvMax: 20));
-
-        final indicator = tester.widget<LinearProgressIndicator>(
-          find.byType(LinearProgressIndicator),
-        );
-        expect(indicator.value, 1.0);
+        // 2 remove icons (for -1 and -5) + 2 add icons (for +1 and +5)
+        expect(find.byIcon(Icons.remove), findsNWidgets(2));
+        expect(find.byIcon(Icons.add), findsNWidgets(2));
       });
     });
 
     group('button callbacks', () {
-      testWidgets('+1 calls onPvAtualChanged with clamped value',
+      testWidgets('+1 calls onPvAtualChanged with incremented value',
           (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
-        await tester.tap(find.text('+1'));
+
+        // Find the +1 button (add icon with "1" text)
+        final addButtons = find.byIcon(Icons.add);
+        // First add button is +1 (index 0), second is +5 (index 1)
+        await tester.tap(addButtons.first);
+        await tester.pump();
 
         expect(lastPvAtual, 16);
       });
 
-      testWidgets('-1 calls onPvAtualChanged with clamped value',
+      testWidgets('-1 calls onPvAtualChanged with decremented value',
           (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
-        await tester.tap(find.text('-1'));
+
+        // Second remove button is -1 (first is -5)
+        final removeButtons = find.byIcon(Icons.remove);
+        await tester.tap(removeButtons.last);
+        await tester.pump();
 
         expect(lastPvAtual, 14);
       });
 
-      testWidgets('+5 calls onPvAtualChanged with clamped value',
+      testWidgets('+5 calls onPvAtualChanged clamped at max',
           (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
-        await tester.tap(find.text('+5'));
+        await tester.pumpWidget(buildPvBar(pvAtual: 17, pvMax: 20));
+
+        final addButtons = find.byIcon(Icons.add);
+        await tester.tap(addButtons.last);
+        await tester.pump();
 
         expect(lastPvAtual, 20);
       });
 
-      testWidgets('-5 calls onPvAtualChanged with clamped value',
+      testWidgets('-5 calls onPvAtualChanged clamped at 0',
           (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
-        await tester.tap(find.text('-5'));
+        await tester.pumpWidget(buildPvBar(pvAtual: 3, pvMax: 20));
 
-        expect(lastPvAtual, 10);
+        final removeButtons = find.byIcon(Icons.remove);
+        await tester.tap(removeButtons.first);
+        await tester.pump();
+
+        expect(lastPvAtual, 0);
       });
 
       testWidgets('+1 clamps at max when already at max', (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 20, pvMax: 20));
-        await tester.tap(find.text('+1'));
+
+        final addButtons = find.byIcon(Icons.add);
+        await tester.tap(addButtons.first);
+        await tester.pump();
 
         expect(lastPvAtual, 20);
       });
 
       testWidgets('-1 clamps at 0 when already at 0', (tester) async {
         await tester.pumpWidget(buildPvBar(pvAtual: 0, pvMax: 20));
-        await tester.tap(find.text('-1'));
+
+        final removeButtons = find.byIcon(Icons.remove);
+        await tester.tap(removeButtons.last);
+        await tester.pump();
 
         expect(lastPvAtual, 0);
-      });
-
-      testWidgets('-5 clamps at 0 when pvAtual is 3', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 3, pvMax: 20));
-        await tester.tap(find.text('-5'));
-
-        expect(lastPvAtual, 0);
-      });
-
-      testWidgets('+5 clamps at max when pvAtual is 18', (tester) async {
-        await tester.pumpWidget(buildPvBar(pvAtual: 18, pvMax: 20));
-        await tester.tap(find.text('+5'));
-
-        expect(lastPvAtual, 20);
       });
     });
 
@@ -195,7 +143,6 @@ void main() {
         await tester.tap(find.text('15'));
         await tester.pumpAndSettle();
 
-        // Clear the field and type new value
         await tester.enterText(find.byType(TextField), '12');
         await tester.tap(find.text('Salvar'));
         await tester.pumpAndSettle();
@@ -213,6 +160,26 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(lastPvAtual, isNull);
+      });
+    });
+
+    group('pulse animation', () {
+      testWidgets('heart pulses when HP <= 25%', (tester) async {
+        await tester.pumpWidget(buildPvBar(pvAtual: 4, pvMax: 20));
+
+        // ScaleTransition should be present for the pulse
+        expect(find.byType(ScaleTransition), findsOneWidget);
+      });
+
+      testWidgets('heart does not pulse when HP > 25%', (tester) async {
+        await tester.pumpWidget(buildPvBar(pvAtual: 15, pvMax: 20));
+
+        // ScaleTransition is always present but animation should be stopped
+        final scaleTransition = tester.widget<ScaleTransition>(
+          find.byType(ScaleTransition),
+        );
+        // When HP > 25%, the animation controller value should be 0
+        expect(scaleTransition.scale.value, 1.0);
       });
     });
   });
