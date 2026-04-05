@@ -15,7 +15,7 @@ class DiceResult {
 }
 
 class DiceController {
-  static const int _maxHistorySize = 5;
+  static const int maxHistorySize = 5;
   final Random _random = Random();
   final List<DiceResult> historico = [];
 
@@ -65,7 +65,7 @@ class DiceController {
 
   void _adicionarHistorico(DiceResult result) {
     historico.insert(0, result);
-    if (historico.length > _maxHistorySize) {
+    if (historico.length > maxHistorySize) {
       historico.removeLast();
     }
   }

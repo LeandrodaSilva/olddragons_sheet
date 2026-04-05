@@ -46,7 +46,7 @@ class _DiceRollerWidgetState extends State<DiceRollerWidget> {
         total: total,
       );
       widget.diceController.historico.insert(0, _lastResult!);
-      if (widget.diceController.historico.length > 6) {
+      if (widget.diceController.historico.length > DiceController.maxHistorySize) {
         widget.diceController.historico.removeLast();
       }
     });
