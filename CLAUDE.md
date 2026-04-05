@@ -5,7 +5,7 @@
 **OldDragons Sheet** (`ods`) is a cross-platform Flutter app for creating and playing Old Dragon RPG characters. The user builds their character (race, class, attributes) and then plays with it through an interactive interface that replaces the traditional paper sheet — with inventory management, equipment, item shop, dice rolling, and everything needed to run an RPG campaign session.
 
 - **Version:** 2.1.0+12
-- **Dart SDK:** >=2.16.1 <3.0.0
+- **Dart SDK:** >=3.0.0 <4.0.0
 - **Flutter channel:** stable
 - **Language:** Portuguese (Brazilian)
 
@@ -16,7 +16,7 @@ flutter pub get          # Install dependencies
 flutter analyze          # Run Dart linting
 flutter test             # Run tests (currently minimal)
 flutter build web        # Build web release
-flutter run              # Run in debug mode
+flutter run -d chrome    # Run in debug mode (web)
 ```
 
 ## Project Structure
@@ -26,64 +26,69 @@ lib/
 ├── main.dart                  # Entry point: Firebase init, Provider setup
 ├── app.dart                   # Root widget, Material theme (dark red)
 ├── firebase_options.dart      # Firebase config (all platforms)
-├── controllers/               # Business logic & static data
-│   ├── character_controller.dart   # Race data with descriptions
-│   ├── class_controller.dart       # Class data with descriptions
-│   └── sheet_controller.dart       # SheetModel (ChangeNotifier/Provider)
+├── controllers/
+│   ├── character_controller.dart   # Race data (static, hardcoded)
+│   ├── class_controller.dart       # Class data (static, hardcoded)
+│   ├── sheet_controller.dart       # SheetModel (ChangeNotifier, Firestore realtime)
+│   ├── inventory_controller.dart   # Item CRUD (Firestore subcollection, realtime)
+│   ├── shop_controller.dart        # Static item catalog (75 items from rulebook)
+│   └── dice_controller.dart        # Dice rolling logic + history
 ├── middlewares/
 │   └── auth_middleware.dart        # Firebase Auth gate (StreamBuilder)
-├── models/                    # Data classes
+├── models/
 │   ├── character_model.dart        # Race model
 │   ├── class_model.dart            # Class model
-│   └── sheet_model.dart            # Character sheet model
-├── screens/                   # Full-page UI views
-│   ├── custom_signin_screen.dart   # Email & Google sign-in
-│   ├── sheets_screen.dart          # Main sheet list
-│   ├── profile_screen.dart         # User profile
-│   ├── race_selection_screen.dart  # Race picker
+│   ├── sheet_model.dart            # Character sheet (attributes, stats, money, XP)
+│   └── item_model.dart             # Item model (weapons, armor, gear)
+├── screens/
+│   ├── custom_signin_screen.dart   # Google Sign-In only
+│   ├── sheets_screen.dart          # Character list + "Jogar" button
+│   ├── play_screen.dart            # Gameplay screen (4 tabs: Ficha/Inventário/Loja/Dados)
+│   ├── add_sheet_screen.dart       # Character creation (attributes, gold rolling)
+│   ├── race_selection_screen.dart  # Race picker (carousel)
 │   ├── race_details_screen.dart    # Race info display
-│   ├── class_selection_screen.dart # Class picker
-│   ├── add_sheet_screen.dart       # Create/edit sheet form
+│   ├── class_selection_screen.dart # Class picker (carousel)
+│   ├── profile_screen.dart         # User profile
 │   └── about_screen.dart           # About page
-├── widgets/                   # Reusable components
-│   ├── layout_widget.dart          # Main scaffold & navigation
-│   ├── appdrawer_widget.dart       # Navigation drawer
-│   ├── race_card_widget.dart       # Race card component
-│   └── loading_widget.dart         # Loading spinner
-└── utils/                     # Utilities
-    ├── color_tools_util.dart       # Material color generation
+├── widgets/
+│   ├── attribute_card_widget.dart   # Attribute card (value + modifier)
+│   ├── pv_bar_widget.dart           # HP bar with +/- buttons
+│   ├── stat_card_widget.dart        # Derived stat card (CA, JP, BA, MOV)
+│   ├── item_card_widget.dart        # Inventory item card
+│   ├── shop_item_card_widget.dart   # Shop item card with buy button
+│   ├── dice_roller_widget.dart      # Dice roller with combat shortcuts
+│   ├── layout_widget.dart           # Main scaffold & navigation
+│   ├── appdrawer_widget.dart        # Navigation drawer
+│   ├── race_card_widget.dart        # Race card component
+│   └── loading_widget.dart          # Loading spinner
+└── utils/
+    ├── color_tools_util.dart        # Material color generation
     └── custom_scroll_behavior_util.dart
 ```
-
-### Other directories
-
-- `test/` — Widget tests (template exists, not yet implemented)
-- `assets/images/` — Race, class, and background images
-- `android/`, `ios/`, `macos/`, `windows/`, `web/` — Platform-specific native code
-- `.github/workflows/` — CI/CD (Firebase Hosting deploy)
 
 ## Architecture
 
 - **Pattern:** MVC with Provider state management
 - **State:** `SheetModel` extends `ChangeNotifier`, provided via `MultiProvider` in `main.dart`
-- **Auth flow:** `AuthMiddleware` listens to Firebase Auth stream → unauthenticated users go to sign-in screen
-- **Data:** Character sheets persisted in Firestore; race/class data is static in controllers
-- **UI:** Material Design with custom dark red theme (RGB 172, 25, 20)
+- **Realtime sync:** Both `SheetModel` and `InventoryController` use Firestore `.snapshots().listen()` for cross-device sync
+- **Auth:** Google Sign-In via `google_sign_in` package → `signInWithCredential` (NOT `signInWithPopup` — has bugs)
+- **Data:** Sheets in `sheets` collection, items in `sheets/{id}/items` subcollection. Race/class data is static in controllers
+- **Gameplay:** `PlayScreen` with 4 tabs: Stats, Inventory, Shop, Dice. Sheet doc listener for realtime updates
 
 ## Key Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `firebase_core`, `firebase_auth`, `cloud_firestore` | Firebase backend |
-| `google_sign_in` | Google authentication |
-| `provider` | State management |
-| `adaptive_navigation` | Responsive navigation |
-| `carousel_slider` | Image carousels |
-| `flutter_gravatar` | User avatars |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `firebase_core` | ^4.6.0 | Firebase backend |
+| `firebase_auth` | ^6.3.0 | Authentication |
+| `cloud_firestore` | ^6.2.0 | Database (realtime) |
+| `google_sign_in` | ^6.2.2 | Google OAuth |
+| `provider` | ^6.1.2 | State management |
+| `carousel_slider` | ^5.0.0 | Image carousels |
 
 ## Naming Conventions
 
-- **Files:** `snake_case` with suffix indicating type (e.g., `sheet_model.dart`, `auth_middleware.dart`)
+- **Files:** `snake_case` with suffix (e.g., `sheet_model.dart`, `auth_middleware.dart`)
 - **Classes:** `PascalCase` (e.g., `SheetsScreen`, `SheetModel`)
 - **Methods/variables:** `camelCase`
 - **Suffixes:** `*Screen` for pages, `*Widget` for components, `*Model` for data, `*Controller` for logic
@@ -92,78 +97,70 @@ lib/
 
 Two GitHub Actions workflows in `.github/workflows/`:
 
-1. **firebase-hosting-merge.yml** — On push to `master`: builds web, deploys to Firebase Hosting (live)
+1. **firebase-hosting-merge.yml** — On push to `master`: builds web, deploys to Firebase Hosting
 2. **firebase-hosting-pull-request.yml** — On PR: builds web, deploys preview channel
-
-Both run: `flutter pub get` → `flutter build web` → Firebase deploy.
 
 Required secret: `FIREBASE_SERVICE_ACCOUNT_OLDDRAGONS_SHEET`
 
-## Linting
+## Design System
 
-Uses `flutter_lints` with config in `analysis_options.yaml`. Always run `flutter analyze` before committing.
-
-## Design System Tokens
+### Theme
+- **Style:** Medieval/fantasy RPG — dark browns, golds, reds. NOT generic Material
+- **Login screen:** Dragon frame image with brown background, gold-bordered button
+- **Assets:** Custom logo (dragon eye), background (dragon battle scene), frame (dragon border)
 
 ### Colors
 | Token | Value | Usage |
 |-------|-------|-------|
-| Primary | `#AC1914` / `RGB(172, 25, 20)` | AppBar, buttons, titles, borders |
+| Primary | `#AC1914` | AppBar, buttons, titles, borders |
+| Gold accent | `#D4A855` | Button borders, highlights (login) |
+| Brown dark | `RGBA(40, 22, 10, 0.85)` | Frame background (login) |
 | Background | `#FFFFFF` | Scaffold, AppBar background |
-| Surface Light | `RGBA(196, 196, 196, 0.5)` | Card backgrounds |
-| Surface Medium | `RGBA(196, 196, 196, 0.9)` | Content area background |
 
-### Typography
-- **Heading:** fontSize 28, FontWeight.bold
-- **Body:** fontSize 18
-- **Font:** Material default (no custom fonts)
-
-### Spacing & Borders
-- Border Radius: Input `8px`, Card `30px`, Button `38px`
-- Elevation: Default `3`, Selected `10`, Flat `0`
-- Max Width: Forms/Cards `600px`, Sign-in `400px`
+### Spacing
+- Border Radius: Input `8px`, Card `16px`, Button `6-8px`
+- Elevation: Default `3`, Selected `6-10`
+- Max Width: Forms/Cards `600px`, Login frame `520px`
 
 ## Old Dragon Game Reference
 
-### Attribute Modifiers (Table 1.1)
+### Attribute Modifiers (Table T1-1, Livro Básico)
 | Value | Modifier |
 |-------|----------|
-| 2-3 | -3 |
-| 4-5 | -2 |
-| 6-8 | -1 |
-| 9-12 | 0 |
-| 13-14 | +1 |
-| 15-16 | +2 |
-| 17-18 | +3 |
-| 19-20 | +4 |
+| 1 | -5 |
+| 2-3 | -4 |
+| 4-5 | -3 |
+| 6-7 | -2 |
+| 8-9 | -1 |
+| 10-11 | 0 |
+| 12-13 | +1 |
+| 14-15 | +2 |
+| 16-17 | +3 |
+| 18-19 | +4 |
+| 20-21 | +5 |
 
-### Derived Stats Formulas
+### Derived Stats
 ```
-PV = Class Hit Die + CON modifier (per level, up to 10th)
-CA = 10 + DEX mod + Armor + Shield + Others
-BAC (melee) = Class BA + STR mod + Others
-BAD (ranged) = Class BA + DEX mod + Others
-JPD = Base JP + DEX mod    (physical dodge)
-JPC = Base JP + CON mod    (physical endurance)
-JPS = Base JP + WIS mod    (mental resistance)
-MV = Race base - Armor load - Others
+PV = Class Hit Die + CON mod (per level, up to 10th)
+CA = 10 + DES mod + Armor + Shield + Others
+BAC (melee) = Class BA + FOR mod + Others
+BAD (ranged) = Class BA + DES mod + Others
+JP = Base JP + attribute mod (DES/CON/SAB depending on type)
+MV = Race base - Armor reduction
 ```
 
 ### Money System
 ```
-10 PC (Copper) = 1 PP (Silver)
-10 PP (Silver) = 1 PO (Gold)
-Starting gold: 3d6 x 10 PO
+10 PC (Cobre) = 1 PP (Prata)
+10 PP (Prata) = 1 PO (Ouro)
+Starting gold: 3d6 × 10 PO
 ```
 
-### SRD Reference
-Full game data (races, classes, equipment tables, spells) documented in `/root/.claude/plans/playful-percolating-kahan.md`
+## Gotchas
 
-## Notes for AI Assistants
-
-- Firebase config is in `lib/firebase_options.dart` — do not modify API keys
-- The app targets Dart SDK <3.0.0; do not use null safety features beyond what's already in the codebase
-- Tests are minimal (`test/widget_test.dart` is a commented-out template) — add tests when creating new features
-- The `web/manifest.json` PWA theme color (#0175C2 blue) differs from the app's red theme — this is intentional
-- No `.env` files exist; Firebase config is embedded in source
-- Full MVP plan with screen specs, data models, and Old Dragon game reference is in `/root/.claude/plans/playful-percolating-kahan.md`
+- **Google Sign-In web:** Do NOT use `signInWithPopup` — causes "TypeError: t is not iterable". Use `google_sign_in` package with `signInWithCredential` instead
+- **People API:** Must be enabled in Google Cloud Console for `google_sign_in` to work
+- **OAuth domains:** Production domain `ods.leandrodasilva.dev` must be in authorized origins/redirects in Google Cloud Console
+- **Web client ID:** `315957121112-dcjoq388bbk80vlifjk7v4a0fv57h76k` (meta tag in `web/index.html`)
+- **Firebase config:** In `lib/firebase_options.dart` — do not modify API keys
+- **Tests:** Minimal (`test/widget_test.dart` is a template) — add tests when creating new features
