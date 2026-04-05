@@ -165,6 +165,50 @@ void main() {
       });
     });
 
+    group('rolarExpressao() edge cases', () {
+      test('handles 0d6 gracefully (zero dice)', () {
+        final result = controller.rolarExpressao('0d6');
+
+        expect(result.expression, '0d6');
+        expect(result.rolls, isEmpty);
+        expect(result.total, 0);
+        expect(result.modifier, 0);
+      });
+
+      test('handles 1d0 gracefully (zero-sided die)', () {
+        // 1d0 would cause _random.nextInt(0) to throw RangeError
+        // This tests that the controller handles it safely
+        expect(
+          () => controller.rolarExpressao('1d0'),
+          anyOf(
+            returnsNormally,
+            throwsA(isA<RangeError>()),
+          ),
+        );
+      });
+
+      test('handles modifier of zero (1d6+0)', () {
+        final result = controller.rolarExpressao('1d6+0');
+
+        expect(result.expression, '1d6+0');
+        expect(result.rolls.length, 1);
+        expect(result.modifier, 0);
+        expect(result.total, result.rolls[0]);
+      });
+
+      test('handles large quantity (99d20)', () {
+        final result = controller.rolarExpressao('99d20');
+
+        expect(result.rolls.length, 99);
+        for (final roll in result.rolls) {
+          expect(roll, greaterThanOrEqualTo(1));
+          expect(roll, lessThanOrEqualTo(20));
+        }
+        final rollsSum = result.rolls.fold(0, (sum, r) => sum + r);
+        expect(result.total, rollsSum);
+      });
+    });
+
     group('history management', () {
       test('stores results newest first', () {
         controller.rolarDado(6);
@@ -181,6 +225,31 @@ void main() {
         }
 
         expect(controller.historico.length, 5);
+      });
+
+      test('history is exactly 5 after 5 rolls', () {
+        for (var i = 0; i < 5; i++) {
+          controller.rolarDado(6);
+        }
+
+        expect(controller.historico.length, 5);
+      });
+
+      test('6th roll evicts the oldest entry', () {
+        controller.rolarDado(4);
+        controller.rolarDado(6);
+        controller.rolarDado(8);
+        controller.rolarDado(10);
+        controller.rolarDado(12);
+
+        expect(controller.historico.length, 5);
+        expect(controller.historico[4].expression, '1d4');
+
+        // 6th roll should evict d4
+        controller.rolarDado(20);
+        expect(controller.historico.length, 5);
+        expect(controller.historico[0].expression, '1d20');
+        expect(controller.historico[4].expression, '1d6');
       });
 
       test('evicts oldest entry when exceeding limit', () {

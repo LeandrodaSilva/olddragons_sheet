@@ -306,6 +306,23 @@ void main() {
         expect(Sheet.modificador(23), 6);
         expect(Sheet.modificador(25), 7);
       });
+
+      test('returns -5 for zero', () {
+        expect(Sheet.modificador(0), -5);
+      });
+
+      test('returns -5 for negative values', () {
+        expect(Sheet.modificador(-1), -5);
+        expect(Sheet.modificador(-10), -5);
+        expect(Sheet.modificador(-100), -5);
+      });
+
+      test('handles very large values', () {
+        // valor=100: 5 + ((100 - 21) ~/ 2) = 5 + 39 = 44
+        expect(Sheet.modificador(100), 44);
+        // valor=50: 5 + ((50 - 21) ~/ 2) = 5 + 14 = 19
+        expect(Sheet.modificador(50), 19);
+      });
     });
   });
 }
