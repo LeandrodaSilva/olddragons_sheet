@@ -383,6 +383,8 @@ void main() {
     group('Fluxo completo de sessão de jogo', () {
       test('simula sessão: compra + equipa + combate + loot', () async {
         sheet.ouro = 300;
+        sheet.pvMax = 30;
+        sheet.pvAtual = 30;
         await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
