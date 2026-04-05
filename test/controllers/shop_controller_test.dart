@@ -21,6 +21,36 @@ void main() {
         }
       });
 
+      test('all items have unique names', () {
+        final nomes = ShopController.catalogo.map((i) => i.nome).toList();
+        final uniqueNomes = nomes.toSet();
+        expect(uniqueNomes.length, nomes.length,
+            reason: 'Duplicate item names found in catalog');
+      });
+
+      test('all weapons have peso > 0', () {
+        final weapons = ShopController.catalogo.where((i) => i.tipo == 'arma');
+        for (final item in weapons) {
+          expect(item.peso, greaterThan(0),
+              reason: '${item.nome} (arma) has peso ${item.peso}');
+        }
+      });
+
+      test('all armors have bonusDefesa > 0', () {
+        final armors = ShopController.catalogo.where((i) => i.tipo == 'armadura');
+        for (final item in armors) {
+          expect(item.bonusDefesa, greaterThan(0),
+              reason: '${item.nome} (armadura) has bonusDefesa ${item.bonusDefesa}');
+        }
+      });
+
+      test('no items have negative prices', () {
+        for (final item in ShopController.catalogo) {
+          expect(item.precoPO, greaterThanOrEqualTo(0),
+              reason: '${item.nome} has negative price ${item.precoPO}');
+        }
+      });
+
       test('all items have a valid tipo', () {
         final validTypes = {'arma', 'municao', 'armadura', 'escudo', 'geral'};
         for (final item in ShopController.catalogo) {

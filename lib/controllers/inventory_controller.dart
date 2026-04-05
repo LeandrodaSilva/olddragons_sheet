@@ -9,9 +9,11 @@ import '../models/item_model.dart';
 class InventoryController extends ChangeNotifier {
   final List<Item> _items = [];
   final String sheetId;
+  final FirebaseFirestore _firestore;
   StreamSubscription? _subscription;
 
-  InventoryController({required this.sheetId}) {
+  InventoryController({required this.sheetId, FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance {
     _subscription = _collection.snapshots().listen((querySnapshots) {
       _items.clear();
       for (var snapshot in querySnapshots.docs) {
@@ -24,7 +26,7 @@ class InventoryController extends ChangeNotifier {
 
   UnmodifiableListView<Item> get items => UnmodifiableListView(_items);
 
-  CollectionReference get _collection => FirebaseFirestore.instance
+  CollectionReference get _collection => _firestore
       .collection('sheets')
       .doc(sheetId)
       .collection('items');

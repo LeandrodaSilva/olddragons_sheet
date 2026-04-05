@@ -10,13 +10,16 @@ import '../models/sheet_model.dart';
 class SheetModel extends ChangeNotifier {
   final List<Sheet> _items = [];
   late String _uid;
+  final FirebaseFirestore _firestore;
   StreamSubscription? _subscription;
 
-  SheetModel() {
-    User? user = FirebaseAuth.instance.currentUser;
+  SheetModel({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _firestore = firestore ?? FirebaseFirestore.instance {
+    final authInstance = auth ?? FirebaseAuth.instance;
+    User? user = authInstance.currentUser;
     _uid = user!.uid;
 
-    _subscription = FirebaseFirestore.instance
+    _subscription = _firestore
         .collection('sheets')
         .where("uid", isEqualTo: _uid)
         .snapshots()
@@ -37,19 +40,19 @@ class SheetModel extends ChangeNotifier {
     data['uid'] = _uid;
 
     if (item.id.isNotEmpty) {
-      await FirebaseFirestore.instance
+      await _firestore
           .collection('sheets')
           .doc(item.id)
           .update(data);
     } else {
       final value =
-          await FirebaseFirestore.instance.collection('sheets').add(data);
+          await _firestore.collection('sheets').add(data);
       item.id = value.id;
     }
   }
 
   void delete(Sheet item) {
-    FirebaseFirestore.instance
+    _firestore
         .collection('sheets')
         .doc(item.id)
         .delete();
