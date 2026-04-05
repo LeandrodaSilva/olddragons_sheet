@@ -115,8 +115,10 @@ class ClassController {
   ];
 
   Class findOneByClassName(String name) {
-    return classes[classes.indexWhere(
+    final index = classes.indexWhere(
       (Class element) => element.name == name,
-    )];
+    );
+    if (index == -1) return classes.first;
+    return classes[index];
   }
 }

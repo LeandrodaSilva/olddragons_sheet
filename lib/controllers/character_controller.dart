@@ -123,8 +123,10 @@ class CharacterController {
   ];
 
   Character findOneByRaceName(String name) {
-    return characters[characters.indexWhere(
+    final index = characters.indexWhere(
       (Character element) => element.name == name,
-    )];
+    );
+    if (index == -1) return characters.first;
+    return characters[index];
   }
 }
