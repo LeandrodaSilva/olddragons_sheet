@@ -1,6 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
+import 'package:ods/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({Key? key}) : super(key: key);
@@ -11,7 +12,6 @@ class AppDrawer extends StatefulWidget {
 
 class AppDrawerState extends State<AppDrawer> {
   bool showUserDetails = false;
-  User? user = FirebaseAuth.instance.currentUser;
   Image background = Image.asset("assets/images/background.png");
 
   Widget _buildDrawerList() {
@@ -47,7 +47,8 @@ class AppDrawerState extends State<AppDrawer> {
           leading: const Icon(Icons.exit_to_app),
           title: const Text('Sair'),
           onTap: () async {
-            await FirebaseAuth.instance.signOut();
+            final authService = Provider.of<AuthService>(context, listen: false);
+            await authService.signOut();
           },
         ),
       ],
@@ -56,6 +57,8 @@ class AppDrawerState extends State<AppDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
     return Drawer(
       // Add a ListView to the drawer. This ensures the user can scroll
       // through the options in the drawer if there isn't enough vertical

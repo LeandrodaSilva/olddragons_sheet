@@ -1,10 +1,9 @@
 import 'dart:math';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/widgets/edit_value_dialog.dart';
 import 'package:provider/provider.dart';
 import '../models/sheet_model.dart';
 
@@ -19,7 +18,6 @@ class AddSheetScreen extends StatefulWidget {
 
 class _AddSheetScreenState extends State<AddSheetScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  User? user = FirebaseAuth.instance.currentUser;
   final _random = Random();
 
   int _rolar3d6() {
@@ -47,7 +45,7 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
   @override
   Widget build(BuildContext context) {
     Sheet item = widget.item;
-    return Consumer<SheetModel>(
+    return Consumer<SheetController>(
       builder: (context, sm, child) {
         return Scaffold(
           appBar: AppBar(
@@ -275,33 +273,13 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          final controller = TextEditingController(text: "$value");
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(label),
-              content: TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                autofocus: true,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text("Cancelar"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    onChanged(int.tryParse(controller.text) ?? value);
-                    Navigator.of(ctx).pop();
-                  },
-                  child: const Text("OK"),
-                ),
-              ],
-            ),
+        onTap: () async {
+          final newVal = await showEditValueDialog(
+            context,
+            title: label,
+            currentValue: value,
           );
+          if (newVal != null) onChanged(newVal);
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

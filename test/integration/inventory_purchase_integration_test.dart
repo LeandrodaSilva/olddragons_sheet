@@ -25,7 +25,7 @@ void main() {
   group('Integração Firebase — Inventário e compras na loja', () {
     late FakeFirebaseFirestore fakeFirestore;
     late FakeFirebaseAuth fakeAuth;
-    late SheetModel sheetModel;
+    late SheetController sheetController;
     late InventoryController inventoryController;
     late ShopController shopController;
     late Sheet sheet;
@@ -33,7 +33,7 @@ void main() {
     setUp(() async {
       fakeFirestore = FakeFirebaseFirestore();
       fakeAuth = FakeFirebaseAuth(uid: 'player-1');
-      sheetModel = SheetModel(firestore: fakeFirestore, auth: fakeAuth);
+      sheetController = SheetController(firestore: fakeFirestore, auth: fakeAuth);
       shopController = ShopController();
 
       // Cria uma ficha de personagem
@@ -46,7 +46,7 @@ void main() {
         forca: 14,
         destreza: 12,
       );
-      await sheetModel.add(sheet);
+      await sheetController.add(sheet);
       await Future.delayed(Duration.zero);
 
       // Cria controller de inventário para essa ficha
@@ -59,7 +59,7 @@ void main() {
 
     tearDown(() {
       inventoryController.dispose();
-      sheetModel.dispose();
+      sheetController.dispose();
     });
 
     group('Compra de item na loja', () {
@@ -74,7 +74,7 @@ void main() {
         // Simula a compra (como _comprarItem faz no PlayScreen)
         final ouroAntes = sheet.ouro;
         sheet.ouro -= espadaLonga.precoPO;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
 
         final copia = Item(
           nome: espadaLonga.nome,
@@ -107,7 +107,7 @@ void main() {
       test('não pode comprar se não tem ouro suficiente', () async {
         // Gasta quase todo o ouro
         sheet.ouro = 5;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         final armas = shopController.filtrarPorTipo('armas');
@@ -119,7 +119,7 @@ void main() {
 
       test('comprar múltiplos itens diferentes', () async {
         sheet.ouro = 500;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         // Compra uma arma
@@ -147,7 +147,7 @@ void main() {
           precoPO: escudo.precoPO,
         ));
 
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         // Verifica os 2 itens no inventário
@@ -385,7 +385,7 @@ void main() {
         sheet.ouro = 300;
         sheet.pvMax = 30;
         sheet.pvAtual = 30;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         // 1. Compra Espada Longa
@@ -398,7 +398,7 @@ void main() {
           dano: espada.dano,
           peso: espada.peso,
         ));
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         // 2. Equipa a espada
@@ -416,7 +416,7 @@ void main() {
 
         // 3. Combate: leva dano
         sheet.pvAtual = (sheet.pvAtual - 12).clamp(0, sheet.pvMax);
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         var sheetData =
@@ -426,7 +426,7 @@ void main() {
         // 4. Loot: ganha 50 PO e 200 XP
         sheet.ouro += 50;
         sheet.xpAtual += 200;
-        await sheetModel.add(sheet);
+        await sheetController.add(sheet);
         await Future.delayed(Duration.zero);
 
         sheetData =

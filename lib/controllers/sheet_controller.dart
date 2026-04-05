@@ -8,13 +8,13 @@ import 'package:flutter/material.dart';
 import '../constants/firestore_constants.dart';
 import '../models/sheet_model.dart';
 
-class SheetModel extends ChangeNotifier {
+class SheetController extends ChangeNotifier {
   final List<Sheet> _items = [];
   late String _uid;
   final FirebaseFirestore _firestore;
   StreamSubscription? _subscription;
 
-  SheetModel({FirebaseFirestore? firestore, FirebaseAuth? auth})
+  SheetController({FirebaseFirestore? firestore, FirebaseAuth? auth})
       : _firestore = firestore ?? FirebaseFirestore.instance {
     final authInstance = auth ?? FirebaseAuth.instance;
     User? user = authInstance.currentUser;
@@ -32,7 +32,7 @@ class SheetModel extends ChangeNotifier {
       }
       notifyListeners();
     }, onError: (error) {
-      debugPrint('SheetModel stream error: $error');
+      debugPrint('SheetController stream error: $error');
     });
   }
 
@@ -54,7 +54,7 @@ class SheetModel extends ChangeNotifier {
         item.id = value.id;
       }
     } catch (e) {
-      debugPrint('SheetModel add error: $e');
+      debugPrint('SheetController add error: $e');
       rethrow;
     }
   }
@@ -66,9 +66,31 @@ class SheetModel extends ChangeNotifier {
           .doc(item.id)
           .delete();
     } catch (e) {
-      debugPrint('SheetModel delete error: $e');
+      debugPrint('SheetController delete error: $e');
       rethrow;
     }
+  }
+
+  StreamSubscription listenToSheet(
+    String sheetId, {
+    required void Function(Sheet) onData,
+    void Function(Object)? onError,
+  }) {
+    return _firestore
+        .collection(FirestoreConstants.sheetsCollection)
+        .doc(sheetId)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        if (!snapshot.exists) return;
+        final data = snapshot.data()!;
+        onData(Sheet.fromMap(snapshot.id, data));
+      },
+      onError: (error) {
+        debugPrint('SheetController listenToSheet error: $error');
+        onError?.call(error);
+      },
+    );
   }
 
   void removeAll() {
