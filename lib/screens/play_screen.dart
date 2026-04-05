@@ -61,11 +61,13 @@ class _PlayScreenState extends State<PlayScreen> {
     });
   }
 
-  void _saveSheet() {
+  Future<void> _saveSheet() async {
     _isSaving = true;
     final sm = Provider.of<SheetModel>(context, listen: false);
-    sm.add(sheet);
-    Future.delayed(const Duration(seconds: 1), () => _isSaving = false);
+    await sm.add(sheet);
+    if (mounted) {
+      _isSaving = false;
+    }
   }
 
   @override
