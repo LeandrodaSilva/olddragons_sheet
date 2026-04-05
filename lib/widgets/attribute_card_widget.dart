@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:ods/widgets/edit_value_dialog.dart';
+import 'package:ods/constants/app_colors.dart';
 import '../models/sheet_model.dart';
 
 class AttributeCard extends StatelessWidget {
@@ -24,7 +25,7 @@ class AttributeCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(
-          color: Color.fromRGBO(172, 25, 20, 0.3),
+          color: AppColors.primaryLight,
           width: 1,
         ),
       ),
@@ -41,7 +42,7 @@ class AttributeCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromRGBO(172, 25, 20, 1),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -55,7 +56,7 @@ class AttributeCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(172, 25, 20, 1),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -74,34 +75,12 @@ class AttributeCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    final controller = TextEditingController(text: "$value");
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(label),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autofocus: true,
-          decoration: const InputDecoration(hintText: "Valor"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: () {
-              final newVal = int.tryParse(controller.text) ?? value;
-              onChanged(newVal);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text("Salvar"),
-          ),
-        ],
-      ),
+  void _showEditDialog(BuildContext context) async {
+    final newVal = await showEditValueDialog(
+      context,
+      title: label,
+      currentValue: value,
     );
+    if (newVal != null) onChanged(newVal);
   }
 }

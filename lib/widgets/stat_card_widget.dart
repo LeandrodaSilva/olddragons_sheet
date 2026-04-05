@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:ods/widgets/edit_value_dialog.dart';
+import 'package:ods/constants/app_colors.dart';
 
 class StatCard extends StatelessWidget {
   final String label;
@@ -31,7 +32,7 @@ class StatCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 20, color: const Color.fromRGBO(172, 25, 20, 1)),
+                Icon(icon, size: 20, color: AppColors.primary),
                 const SizedBox(height: 2),
                 Text(
                   "$value",
@@ -52,34 +53,12 @@ class StatCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    final controller = TextEditingController(text: "$value");
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(label),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autofocus: true,
-          decoration: const InputDecoration(hintText: "Valor"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: () {
-              final newVal = int.tryParse(controller.text) ?? value;
-              onChanged(newVal);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text("Salvar"),
-          ),
-        ],
-      ),
+  void _showEditDialog(BuildContext context) async {
+    final newVal = await showEditValueDialog(
+      context,
+      title: label,
+      currentValue: value,
     );
+    if (newVal != null) onChanged(newVal);
   }
 }

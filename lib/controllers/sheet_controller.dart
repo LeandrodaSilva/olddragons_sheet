@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/firestore_constants.dart';
 import '../models/sheet_model.dart';
 
 class SheetModel extends ChangeNotifier {
@@ -20,8 +21,8 @@ class SheetModel extends ChangeNotifier {
     _uid = user!.uid;
 
     _subscription = _firestore
-        .collection('sheets')
-        .where("uid", isEqualTo: _uid)
+        .collection(FirestoreConstants.sheetsCollection)
+        .where(FirestoreConstants.uidField, isEqualTo: _uid)
         .snapshots()
         .listen((querySnapshots) {
       _items.clear();
@@ -30,32 +31,44 @@ class SheetModel extends ChangeNotifier {
         _items.add(Sheet.fromMap(snapshot.id, data));
       }
       notifyListeners();
+    }, onError: (error) {
+      debugPrint('SheetModel stream error: $error');
     });
   }
 
   UnmodifiableListView<Sheet> get items => UnmodifiableListView(_items);
 
   Future<void> add(Sheet item) async {
-    final data = item.toMap();
-    data['uid'] = _uid;
+    try {
+      final data = item.toMap();
+      data[FirestoreConstants.uidField] = _uid;
 
-    if (item.id.isNotEmpty) {
-      await _firestore
-          .collection('sheets')
-          .doc(item.id)
-          .update(data);
-    } else {
-      final value =
-          await _firestore.collection('sheets').add(data);
-      item.id = value.id;
+      if (item.id.isNotEmpty) {
+        await _firestore
+            .collection(FirestoreConstants.sheetsCollection)
+            .doc(item.id)
+            .update(data);
+      } else {
+        final value =
+            await _firestore.collection(FirestoreConstants.sheetsCollection).add(data);
+        item.id = value.id;
+      }
+    } catch (e) {
+      debugPrint('SheetModel add error: $e');
+      rethrow;
     }
   }
 
-  void delete(Sheet item) {
-    _firestore
-        .collection('sheets')
-        .doc(item.id)
-        .delete();
+  Future<void> delete(Sheet item) async {
+    try {
+      await _firestore
+          .collection(FirestoreConstants.sheetsCollection)
+          .doc(item.id)
+          .delete();
+    } catch (e) {
+      debugPrint('SheetModel delete error: $e');
+      rethrow;
+    }
   }
 
   void removeAll() {

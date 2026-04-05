@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ods/constants/app_colors.dart';
 import 'package:ods/middlewares/auth_middleware.dart';
 import 'package:ods/widgets/layout_widget.dart';
 import 'package:ods/utils/color_tools_util.dart';
@@ -14,12 +15,12 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: ColorTools.createMaterialColor(
-          const Color.fromRGBO(172, 25, 20, 1),
+          AppColors.primary,
         ),
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
-          foregroundColor: Color.fromRGBO(172, 25, 20, 1),
+          foregroundColor: AppColors.primary,
           elevation: 0,
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -33,7 +34,7 @@ class App extends StatelessWidget {
               const EdgeInsets.all(24),
             ),
             backgroundColor: WidgetStateProperty.all<Color>(
-              const Color.fromRGBO(172, 25, 20, 1),
+              AppColors.primary,
             ),
             overlayColor: WidgetStateProperty.all<Color>(
               Colors.redAccent,

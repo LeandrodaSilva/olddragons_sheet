@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:ods/widgets/edit_value_dialog.dart';
+import 'package:ods/constants/app_colors.dart';
 
 class PvBar extends StatelessWidget {
   final int pvAtual;
@@ -35,7 +36,7 @@ class PvBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.favorite,
-                    color: Color.fromRGBO(172, 25, 20, 1), size: 24),
+                    color: AppColors.primary, size: 24),
                 const SizedBox(width: 8),
                 const Text("PV",
                     style:
@@ -115,32 +116,12 @@ class PvBar extends StatelessWidget {
   }
 
   void _editValue(BuildContext context, String title, int current,
-      ValueChanged<int> onSave) {
-    final controller = TextEditingController(text: "$current");
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancelar"),
-          ),
-          TextButton(
-            onPressed: () {
-              onSave(int.tryParse(controller.text) ?? current);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text("Salvar"),
-          ),
-        ],
-      ),
+      ValueChanged<int> onSave) async {
+    final newVal = await showEditValueDialog(
+      context,
+      title: title,
+      currentValue: current,
     );
+    if (newVal != null) onSave(newVal);
   }
 }

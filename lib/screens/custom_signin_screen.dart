@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:ods/constants/app_colors.dart';
 
 class CustomSignInScreen extends StatelessWidget {
   const CustomSignInScreen({Key? key}) : super(key: key);
@@ -91,7 +92,7 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                       bottom: 55,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color.fromRGBO(40, 22, 10, 0.85),
+                          color: AppColors.brownDark,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Center(
@@ -106,25 +107,25 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFFD4A855),
+                                    color: AppColors.goldAccent,
                                   ),
                                 ),
                                 label: const Text(
                                   'Entrar com Google',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Color(0xFFE8D5B0),
+                                    color: AppColors.goldLight,
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
-                                      const Color.fromRGBO(60, 30, 15, 0.9),
+                                      AppColors.brownButton,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(6),
                                     side: const BorderSide(
-                                      color: Color(0xFFD4A855),
+                                      color: AppColors.goldAccent,
                                       width: 1.5,
                                     ),
                                   ),
