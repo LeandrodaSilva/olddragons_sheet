@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/character_controller.dart';
+import 'package:ods/controllers/class_controller.dart';
 import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
 import 'package:ods/controllers/inventory_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/utils/stats_calculator_util.dart';
 import 'package:ods/widgets/attribute_card_widget.dart';
 import 'package:ods/widgets/edit_value_dialog.dart';
 import 'package:ods/widgets/pv_bar_widget.dart';
@@ -35,13 +37,17 @@ class _PlayScreenState extends State<PlayScreen> {
   StreamSubscription? _sheetSubscription;
   bool _isSaving = false;
   final CharacterController _characterController = CharacterController();
+  final ClassController _classController = ClassController();
   final ShopController _shopController = ShopController();
   final DiceController _diceController = DiceController();
+  late final InventoryController _inventoryController;
 
   @override
   void initState() {
     super.initState();
     sheet = widget.sheet;
+    _inventoryController = InventoryController(sheetId: sheet.id);
+    _inventoryController.addListener(_onInventoryChanged);
     final sc = Provider.of<SheetController>(context, listen: false);
     _sheetSubscription = sc.listenToSheet(
       sheet.id,
@@ -50,8 +56,13 @@ class _PlayScreenState extends State<PlayScreen> {
         setState(() {
           sheet = updatedSheet;
         });
+        _recalc();
       },
     );
+    // Recalcula os stats derivados após o inventário inicial carregar.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_recalc()) _saveSheet();
+    });
   }
 
   Future<void> _saveSheet() async {
@@ -63,12 +74,69 @@ class _PlayScreenState extends State<PlayScreen> {
     }
   }
 
-  InventoryController get _inventoryController =>
-      Provider.of<InventoryController>(context, listen: false);
+  void _onInventoryChanged() {
+    if (_recalc()) _saveSheet();
+  }
+
+  List<Item> get _equipados =>
+      _inventoryController.items.where((i) => i.equipado).toList();
+
+  /// Recalcula PV/CA/BA/JP/MOV a partir de atributos, classe, raça e itens
+  /// equipados. Retorna true se algum valor mudou (para persistir só quando
+  /// necessário).
+  bool _recalc() {
+    if (!mounted) return false;
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final raca = _characterController.findOneByRaceName(sheet.race);
+    final equipados = _equipados;
+    final nivel = int.tryParse(sheet.level) ?? 1;
+
+    final novoCa = StatsCalculator.ca(
+        destreza: sheet.destreza, equipados: equipados, outros: sheet.caOutros);
+    final novoBa = StatsCalculator.baseAtaque(
+        classe: classe, nivel: nivel, outros: sheet.baOutros);
+    final novoJp = StatsCalculator.jpBase(
+        classe: classe, nivel: nivel, outros: sheet.jpOutros);
+    final novoMov = StatsCalculator.movimento(
+        baseRaca: raca.movementSpeed,
+        equipados: equipados,
+        outros: sheet.movOutros);
+    final novoPvMax = StatsCalculator.pvMax(
+        dadoDeVida: classe.dadoDeVida,
+        constituicao: sheet.constituicao,
+        nivel: nivel,
+        outros: sheet.pvOutros);
+    // Personagem recém-criado (PV ainda não inicializado) começa com PV cheio;
+    // do contrário, apenas limita o PV atual ao novo máximo.
+    final bool primeiraInicializacao = sheet.pvMax == 0 && novoPvMax > 0;
+    final novoPvAtual = primeiraInicializacao
+        ? novoPvMax
+        : (sheet.pvAtual > novoPvMax ? novoPvMax : sheet.pvAtual);
+
+    final mudou = novoCa != sheet.ca ||
+        novoBa != sheet.ba ||
+        novoJp != sheet.jp ||
+        novoMov != sheet.movimento ||
+        novoPvMax != sheet.pvMax ||
+        novoPvAtual != sheet.pvAtual;
+    if (!mudou) return false;
+
+    setState(() {
+      sheet.ca = novoCa;
+      sheet.ba = novoBa;
+      sheet.jp = novoJp;
+      sheet.movimento = novoMov;
+      sheet.pvMax = novoPvMax;
+      sheet.pvAtual = novoPvAtual;
+    });
+    return true;
+  }
 
   @override
   void dispose() {
     _sheetSubscription?.cancel();
+    _inventoryController.removeListener(_onInventoryChanged);
+    _inventoryController.dispose();
     super.dispose();
   }
 
@@ -81,8 +149,8 @@ class _PlayScreenState extends State<PlayScreen> {
       DiceRollerWidget(diceController: _diceController, sheet: sheet),
     ];
 
-    return ChangeNotifierProvider(
-      create: (_) => InventoryController(sheetId: sheet.id),
+    return ChangeNotifierProvider<InventoryController>.value(
+      value: _inventoryController,
       child: Scaffold(
       appBar: AppBar(
         title: Text("${sheet.name} — Nv.${sheet.level}"),
@@ -128,10 +196,10 @@ class _PlayScreenState extends State<PlayScreen> {
                   _saveSheet();
                 },
                 onPvMaxChanged: (v) {
-                  setState(() {
-                    sheet.pvMax = v;
-                    if (sheet.pvAtual > v) sheet.pvAtual = v;
-                  });
+                  // O valor digitado vira o ajuste manual ("outros") sobre o
+                  // PV calculado pelo dado de vida + CON.
+                  sheet.pvOutros += v - sheet.pvMax;
+                  _recalc();
                   _saveSheet();
                 },
               ),
@@ -237,6 +305,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.forca,
           onChanged: (v) {
             setState(() => sheet.forca = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -245,6 +314,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.destreza,
           onChanged: (v) {
             setState(() => sheet.destreza = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -253,6 +323,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.constituicao,
           onChanged: (v) {
             setState(() => sheet.constituicao = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -261,6 +332,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.inteligencia,
           onChanged: (v) {
             setState(() => sheet.inteligencia = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -269,6 +341,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.sabedoria,
           onChanged: (v) {
             setState(() => sheet.sabedoria = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -277,6 +350,7 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.carisma,
           onChanged: (v) {
             setState(() => sheet.carisma = v);
+            _recalc();
             _saveSheet();
           },
         ),
@@ -285,6 +359,9 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Widget _buildStatsRow() {
+    // Os stats são calculados automaticamente. O valor digitado ao tocar num
+    // card é interpretado como o total desejado: a diferença em relação ao
+    // valor calculado fica registrada como ajuste manual ("outros").
     return Row(
       children: [
         StatCard(
@@ -292,7 +369,8 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.ca,
           icon: Icons.shield,
           onChanged: (v) {
-            setState(() => sheet.ca = v);
+            sheet.caOutros += v - sheet.ca;
+            _recalc();
             _saveSheet();
           },
         ),
@@ -301,7 +379,8 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.jp,
           icon: Icons.security,
           onChanged: (v) {
-            setState(() => sheet.jp = v);
+            sheet.jpOutros += v - sheet.jp;
+            _recalc();
             _saveSheet();
           },
         ),
@@ -310,7 +389,8 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.ba,
           icon: Icons.gps_fixed,
           onChanged: (v) {
-            setState(() => sheet.ba = v);
+            sheet.baOutros += v - sheet.ba;
+            _recalc();
             _saveSheet();
           },
         ),
@@ -319,7 +399,8 @@ class _PlayScreenState extends State<PlayScreen> {
           value: sheet.movimento,
           icon: Icons.directions_run,
           onChanged: (v) {
-            setState(() => sheet.movimento = v);
+            sheet.movOutros += v - sheet.movimento;
+            _recalc();
             _saveSheet();
           },
         ),
