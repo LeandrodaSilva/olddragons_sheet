@@ -34,6 +34,13 @@ class Sheet {
   // XP
   int xpAtual;
 
+  // Ajustes manuais ("Outros") somados aos stats calculados automaticamente
+  int caOutros;
+  int baOutros;
+  int jpOutros;
+  int movOutros;
+  int pvOutros;
+
   // Notas
   String notas;
 
@@ -64,6 +71,11 @@ class Sheet {
     this.prata = 0,
     this.cobre = 0,
     this.xpAtual = 0,
+    this.caOutros = 0,
+    this.baOutros = 0,
+    this.jpOutros = 0,
+    this.movOutros = 0,
+    this.pvOutros = 0,
     this.notas = "",
   });
 
@@ -94,6 +106,11 @@ class Sheet {
       'prata': prata,
       'cobre': cobre,
       'xpAtual': xpAtual,
+      'caOutros': caOutros,
+      'baOutros': baOutros,
+      'jpOutros': jpOutros,
+      'movOutros': movOutros,
+      'pvOutros': pvOutros,
       'notas': notas,
     };
   }
@@ -126,6 +143,11 @@ class Sheet {
       prata: data['prata'] ?? 0,
       cobre: data['cobre'] ?? 0,
       xpAtual: data['xpAtual'] ?? 0,
+      caOutros: data['caOutros'] ?? 0,
+      baOutros: data['baOutros'] ?? 0,
+      jpOutros: data['jpOutros'] ?? 0,
+      movOutros: data['movOutros'] ?? 0,
+      pvOutros: data['pvOutros'] ?? 0,
       notas: data['notas'] ?? "",
     );
   }
