@@ -11,7 +11,7 @@ class RaceSelectionScreen extends StatefulWidget {
   const RaceSelectionScreen({Key? key}) : super(key: key);
 
   @override
-  _RaceSelectionScreenState createState() => _RaceSelectionScreenState();
+  State<RaceSelectionScreen> createState() => _RaceSelectionScreenState();
 }
 
 class _RaceSelectionScreenState extends State<RaceSelectionScreen> {

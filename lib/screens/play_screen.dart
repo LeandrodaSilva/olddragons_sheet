@@ -8,6 +8,11 @@ import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
 import 'package:ods/controllers/inventory_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/controllers/spell_controller.dart';
+import 'package:ods/models/class_model.dart';
+import 'package:ods/models/spell_model.dart';
+import 'package:ods/utils/leveling_util.dart';
+import 'package:ods/utils/magic_calculator_util.dart';
 import 'package:ods/utils/stats_calculator_util.dart';
 import 'package:ods/widgets/attribute_card_widget.dart';
 import 'package:ods/widgets/edit_value_dialog.dart';
@@ -41,6 +46,7 @@ class _PlayScreenState extends State<PlayScreen> {
   final ShopController _shopController = ShopController();
   final DiceController _diceController = DiceController();
   late final InventoryController _inventoryController;
+  late final SpellController _spellController;
 
   @override
   void initState() {
@@ -48,6 +54,8 @@ class _PlayScreenState extends State<PlayScreen> {
     sheet = widget.sheet;
     _inventoryController = InventoryController(sheetId: sheet.id);
     _inventoryController.addListener(_onInventoryChanged);
+    _spellController = SpellController(sheetId: sheet.id);
+    _spellController.addListener(_onSpellsChanged);
     final sc = Provider.of<SheetController>(context, listen: false);
     _sheetSubscription = sc.listenToSheet(
       sheet.id,
@@ -67,15 +75,46 @@ class _PlayScreenState extends State<PlayScreen> {
 
   Future<void> _saveSheet() async {
     _isSaving = true;
-    final sc = Provider.of<SheetController>(context, listen: false);
-    await sc.add(sheet);
-    if (mounted) {
-      _isSaving = false;
+    try {
+      final sc = Provider.of<SheetController>(context, listen: false);
+      await sc.add(sheet);
+    } catch (_) {
+      _notifyError("Erro ao salvar a ficha. Verifique sua conexão.");
+    } finally {
+      if (mounted) {
+        _isSaving = false;
+      }
+    }
+  }
+
+  /// Exibe uma mensagem de erro ao usuário (no-op se a tela já foi desmontada).
+  void _notifyError(String mensagem) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red[700],
+      ),
+    );
+  }
+
+  /// Executa uma ação assíncrona de inventário exibindo erro ao usuário em
+  /// caso de falha.
+  Future<void> _runComFeedback(
+      Future<void> Function() acao, String mensagemErro) async {
+    try {
+      await acao();
+    } catch (_) {
+      _notifyError(mensagemErro);
     }
   }
 
   void _onInventoryChanged() {
     if (_recalc()) _saveSheet();
+  }
+
+  void _onSpellsChanged() {
+    if (mounted) setState(() {});
   }
 
   List<Item> get _equipados =>
@@ -137,37 +176,52 @@ class _PlayScreenState extends State<PlayScreen> {
     _sheetSubscription?.cancel();
     _inventoryController.removeListener(_onInventoryChanged);
     _inventoryController.dispose();
+    _spellController.removeListener(_onSpellsChanged);
+    _spellController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final isConjurador = classe.conjurador;
+
+    final tabs = <Widget>[
       _buildFichaTab(),
       _buildInventarioTab(),
       _buildLojaTab(),
-      DiceRollerWidget(diceController: _diceController, sheet: sheet),
     ];
+    final navItems = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Ficha"),
+      const BottomNavigationBarItem(
+          icon: Icon(Icons.backpack), label: "Inventário"),
+      const BottomNavigationBarItem(icon: Icon(Icons.store), label: "Loja"),
+    ];
+    if (isConjurador) {
+      tabs.add(_buildMagiasTab(classe));
+      navItems.add(const BottomNavigationBarItem(
+          icon: Icon(Icons.auto_stories), label: "Magias"));
+    }
+    tabs.add(DiceRollerWidget(diceController: _diceController, sheet: sheet));
+    navItems.add(
+        const BottomNavigationBarItem(icon: Icon(Icons.casino), label: "Dados"));
+
+    final indiceAtual = _currentTab.clamp(0, tabs.length - 1);
 
     return ChangeNotifierProvider<InventoryController>.value(
       value: _inventoryController,
       child: Scaffold(
-      appBar: AppBar(
-        title: Text("${sheet.name} — Nv.${sheet.level}"),
-      ),
-      body: tabs[_currentTab],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        onTap: (index) => setState(() => _currentTab = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Ficha"),
-          BottomNavigationBarItem(icon: Icon(Icons.backpack), label: "Inventário"),
-          BottomNavigationBarItem(icon: Icon(Icons.store), label: "Loja"),
-          BottomNavigationBarItem(icon: Icon(Icons.casino), label: "Dados"),
-        ],
-      ),
+        appBar: AppBar(
+          title: Text("${sheet.name} — Nv.${sheet.level}"),
+        ),
+        body: tabs[indiceAtual],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: indiceAtual,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppColors.primary,
+          onTap: (index) => setState(() => _currentTab = index),
+          items: navItems,
+        ),
       ),
     );
   }
@@ -463,6 +517,16 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Widget _buildXpRow() {
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final nivel = int.tryParse(sheet.level) ?? 1;
+    final xpProximo =
+        Leveling.xpProximoNivel(classe: classe, nivelAtual: nivel);
+    final podeSubir = Leveling.podeSubir(
+        classe: classe, nivelAtual: nivel, xpAtual: sheet.xpAtual);
+    final progresso = xpProximo != null
+        ? "${sheet.xpAtual} / $xpProximo p/ Nv ${nivel + 1}"
+        : "Nível máximo";
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
@@ -476,43 +540,109 @@ class _PlayScreenState extends State<PlayScreen> {
           ),
         ],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final newVal = await showEditValueDialog(context, title: "XP", currentValue: sheet.xpAtual);
-          if (newVal != null) {
-            setState(() => sheet.xpAtual = newVal);
-            _saveSheet();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star,
-                  color: AppColors.goldAccent, size: 22,
-                  shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.5), blurRadius: 6)]),
-              const SizedBox(width: 8),
-              Text("XP",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.7),
-                  )),
-              const SizedBox(width: 10),
-              Text("${sheet.xpAtual}",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.goldAccent,
-                    shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.3), blurRadius: 4)],
-                  )),
-            ],
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              final newVal = await showEditValueDialog(context,
+                  title: "XP", currentValue: sheet.xpAtual);
+              if (newVal != null) {
+                setState(() => sheet.xpAtual = newVal);
+                _saveSheet();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.star,
+                          color: AppColors.goldAccent,
+                          size: 22,
+                          shadows: [
+                            Shadow(
+                                color: AppColors.goldAccent.withOpacity(0.5),
+                                blurRadius: 6)
+                          ]),
+                      const SizedBox(width: 8),
+                      Text("XP",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.7),
+                          )),
+                      const SizedBox(width: 10),
+                      Text("${sheet.xpAtual}",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.goldAccent,
+                            shadows: [
+                              Shadow(
+                                  color: AppColors.goldAccent.withOpacity(0.3),
+                                  blurRadius: 4)
+                            ],
+                          )),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(progresso,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.5),
+                      )),
+                ],
+              ),
+            ),
           ),
-        ),
+          if (podeSubir)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _subirNivel,
+                  icon: const Icon(Icons.arrow_upward, size: 18),
+                  label: Text("Subir para o nível ${nivel + 1}"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldAccent,
+                    foregroundColor: const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  /// Sobe um nível: incrementa o nível, recalcula os stats derivados e soma o
+  /// PV ganho também ao PV atual.
+  void _subirNivel() {
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final nivelAtual = int.tryParse(sheet.level) ?? 1;
+    if (!Leveling.podeSubir(
+        classe: classe, nivelAtual: nivelAtual, xpAtual: sheet.xpAtual)) {
+      return;
+    }
+    final pvMaxAntes = sheet.pvMax;
+    setState(() => sheet.level = "${nivelAtual + 1}");
+    _recalc();
+    final ganhoPv = sheet.pvMax - pvMaxAntes;
+    if (ganhoPv > 0) {
+      setState(() {
+        sheet.pvAtual = (sheet.pvAtual + ganhoPv).clamp(0, sheet.pvMax);
+      });
+    }
+    _saveSheet();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Subiu para o nível ${sheet.level}!")),
+      );
+    }
   }
 
   Widget _buildNotasField() {
@@ -638,7 +768,10 @@ class _PlayScreenState extends State<PlayScreen> {
       peso: shopItem.peso,
     );
 
-    _inventoryController.addItem(copia);
+    _runComFeedback(
+      () => _inventoryController.addItem(copia),
+      "Erro ao adicionar o item comprado.",
+    );
     _saveSheet();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -683,15 +816,18 @@ class _PlayScreenState extends State<PlayScreen> {
                         final item = items[index];
                         return ItemCard(
                           item: item,
-                          onToggleEquip: () {
-                            inventoryController.toggleEquipped(item);
-                          },
-                          onDelete: () {
-                            inventoryController.removeItem(item);
-                          },
-                          onQuantityChanged: (q) {
-                            inventoryController.updateQuantity(item, q);
-                          },
+                          onToggleEquip: () => _runComFeedback(
+                            () => inventoryController.toggleEquipped(item),
+                            "Erro ao equipar o item.",
+                          ),
+                          onDelete: () => _runComFeedback(
+                            () => inventoryController.removeItem(item),
+                            "Erro ao remover o item.",
+                          ),
+                          onQuantityChanged: (q) => _runComFeedback(
+                            () => inventoryController.updateQuantity(item, q),
+                            "Erro ao atualizar a quantidade.",
+                          ),
                         );
                       },
                     ),
@@ -765,11 +901,14 @@ class _PlayScreenState extends State<PlayScreen> {
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
-                _inventoryController.addItem(Item(
-                  nome: nome,
-                  tipo: tipo,
-                  peso: peso,
-                ));
+                _runComFeedback(
+                  () => _inventoryController.addItem(Item(
+                    nome: nome,
+                    tipo: tipo,
+                    peso: peso,
+                  )),
+                  "Erro ao adicionar o item.",
+                );
                 Navigator.of(ctx).pop();
               }
             },
@@ -780,4 +919,233 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  // === ABA MAGIAS ===
+
+  Widget _buildMagiasTab(Class classe) {
+    final nivel = int.tryParse(sheet.level) ?? 1;
+    final atributo =
+        classe.tipoMagia == 'arcana' ? sheet.inteligencia : sheet.sabedoria;
+    final magias = MagicCalculator.magiasPorDia(
+        classe: classe, nivel: nivel, atributoConjurador: atributo);
+    final maiorCirc = MagicCalculator.maiorCirculo(classe: classe, nivel: nivel);
+    final atributoLabel = classe.tipoMagia == 'arcana' ? 'INT' : 'SAB';
+    final tipoLabel = classe.tipoMagia == 'arcana' ? 'arcanas' : 'divinas';
+
+    if (maiorCirc == 0) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text("Sem magias disponíveis neste nível.",
+              style: TextStyle(color: Colors.grey[600])),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text("Magias $tipoLabel • inclui bônus por $atributoLabel",
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                  ),
+                  TextButton.icon(
+                    onPressed: _descansar,
+                    icon: const Icon(Icons.bedtime, size: 18),
+                    label: const Text("Descansar"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              for (int c = 1; c <= maiorCirc; c++) ...[
+                _buildCirculoSection(c, magias[c - 1]),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 4),
+              ElevatedButton.icon(
+                onPressed: () => _showAddSpellDialog(maiorCirc),
+                icon: const Icon(Icons.add),
+                label: const Text("Adicionar Magia"),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCirculoSection(int circulo, int total) {
+    final usadas = sheet.magiasUsadas[circulo - 1];
+    final disponiveis = total - usadas;
+    final magiasCirc = _spellController.doCirculo(circulo);
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text("Círculo $circulo",
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline, size: 22),
+                  onPressed: () => _alterarMagiaUsada(circulo - 1, 1, total),
+                  tooltip: "Gastar magia",
+                ),
+                Text("$disponiveis / $total",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 22),
+                  onPressed: () => _alterarMagiaUsada(circulo - 1, -1, total),
+                  tooltip: "Recuperar magia",
+                ),
+              ],
+            ),
+            if (magiasCirc.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text("Nenhuma magia anotada.",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              ),
+            for (final magia in magiasCirc) _buildSpellTile(magia),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpellTile(Spell magia) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      leading: IconButton(
+        icon: Icon(
+          magia.preparada ? Icons.check_circle : Icons.circle_outlined,
+          color: magia.preparada ? AppColors.primary : Colors.grey,
+          size: 20,
+        ),
+        onPressed: () => _runComFeedback(
+          () => _spellController.togglePreparada(magia),
+          "Erro ao atualizar a magia.",
+        ),
+        tooltip: magia.preparada ? "Preparada" : "Não preparada",
+      ),
+      title: Text(magia.nome,
+          style: TextStyle(
+              fontWeight:
+                  magia.preparada ? FontWeight.bold : FontWeight.normal)),
+      subtitle: magia.descricao.isNotEmpty
+          ? Text(magia.descricao, style: const TextStyle(fontSize: 12))
+          : null,
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline, size: 20),
+        onPressed: () => _runComFeedback(
+          () => _spellController.removeSpell(magia),
+          "Erro ao remover a magia.",
+        ),
+      ),
+    );
+  }
+
+  void _alterarMagiaUsada(int idx, int delta, int total) {
+    final novo = (sheet.magiasUsadas[idx] + delta).clamp(0, total);
+    if (novo == sheet.magiasUsadas[idx]) return;
+    setState(() => sheet.magiasUsadas[idx] = novo);
+    _saveSheet();
+  }
+
+  void _descansar() {
+    setState(() => sheet.magiasUsadas = [0, 0, 0, 0, 0]);
+    _saveSheet();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Você descansou: magias restauradas.")),
+      );
+    }
+  }
+
+  void _showAddSpellDialog(int maxCirculo) {
+    String nome = "";
+    String descricao = "";
+    int circulo = 1;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Adicionar Magia"),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Nome"),
+                autofocus: true,
+                validator: (v) =>
+                    v == null || v.isEmpty ? "Informe o nome" : null,
+                onSaved: (v) => nome = v ?? "",
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<int>(
+                value: circulo,
+                decoration: const InputDecoration(labelText: "Círculo"),
+                items: [
+                  for (int c = 1; c <= maxCirculo; c++)
+                    DropdownMenuItem(value: c, child: Text("$cº círculo")),
+                ],
+                onChanged: (v) => circulo = v ?? 1,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                decoration:
+                    const InputDecoration(labelText: "Descrição (opcional)"),
+                onSaved: (v) => descricao = v ?? "",
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                formKey.currentState!.save();
+                _runComFeedback(
+                  () => _spellController.addSpell(Spell(
+                    nome: nome,
+                    circulo: circulo,
+                    descricao: descricao,
+                    preparada: true,
+                  )),
+                  "Erro ao adicionar a magia.",
+                );
+                Navigator.of(ctx).pop();
+              }
+            },
+            child: const Text("Adicionar"),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 class LoadingWidget extends StatefulWidget {
+  const LoadingWidget({Key? key}) : super(key: key);
+
   @override
-  _LoadingWidgetState createState() => _LoadingWidgetState();
+  State<LoadingWidget> createState() => _LoadingWidgetState();
 }
 
 class _LoadingWidgetState extends State<LoadingWidget>
@@ -12,10 +14,10 @@ class _LoadingWidgetState extends State<LoadingWidget>
 
   @override
   void initState() {
-    _animationController =
-        new AnimationController(vsync: this, duration: Duration(seconds: 1));
-    _animationController.repeat(reverse: true);
     super.initState();
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(seconds: 1));
+    _animationController.repeat(reverse: true);
   }
 
   @override
