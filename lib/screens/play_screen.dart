@@ -8,6 +8,7 @@ import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
 import 'package:ods/controllers/inventory_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/utils/leveling_util.dart';
 import 'package:ods/utils/stats_calculator_util.dart';
 import 'package:ods/widgets/attribute_card_widget.dart';
 import 'package:ods/widgets/edit_value_dialog.dart';
@@ -463,6 +464,16 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Widget _buildXpRow() {
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final nivel = int.tryParse(sheet.level) ?? 1;
+    final xpProximo =
+        Leveling.xpProximoNivel(classe: classe, nivelAtual: nivel);
+    final podeSubir = Leveling.podeSubir(
+        classe: classe, nivelAtual: nivel, xpAtual: sheet.xpAtual);
+    final progresso = xpProximo != null
+        ? "${sheet.xpAtual} / $xpProximo p/ Nv ${nivel + 1}"
+        : "Nível máximo";
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
@@ -476,43 +487,109 @@ class _PlayScreenState extends State<PlayScreen> {
           ),
         ],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final newVal = await showEditValueDialog(context, title: "XP", currentValue: sheet.xpAtual);
-          if (newVal != null) {
-            setState(() => sheet.xpAtual = newVal);
-            _saveSheet();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star,
-                  color: AppColors.goldAccent, size: 22,
-                  shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.5), blurRadius: 6)]),
-              const SizedBox(width: 8),
-              Text("XP",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.7),
-                  )),
-              const SizedBox(width: 10),
-              Text("${sheet.xpAtual}",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.goldAccent,
-                    shadows: [Shadow(color: AppColors.goldAccent.withOpacity(0.3), blurRadius: 4)],
-                  )),
-            ],
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              final newVal = await showEditValueDialog(context,
+                  title: "XP", currentValue: sheet.xpAtual);
+              if (newVal != null) {
+                setState(() => sheet.xpAtual = newVal);
+                _saveSheet();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.star,
+                          color: AppColors.goldAccent,
+                          size: 22,
+                          shadows: [
+                            Shadow(
+                                color: AppColors.goldAccent.withOpacity(0.5),
+                                blurRadius: 6)
+                          ]),
+                      const SizedBox(width: 8),
+                      Text("XP",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.7),
+                          )),
+                      const SizedBox(width: 10),
+                      Text("${sheet.xpAtual}",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.goldAccent,
+                            shadows: [
+                              Shadow(
+                                  color: AppColors.goldAccent.withOpacity(0.3),
+                                  blurRadius: 4)
+                            ],
+                          )),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(progresso,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.5),
+                      )),
+                ],
+              ),
+            ),
           ),
-        ),
+          if (podeSubir)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _subirNivel,
+                  icon: const Icon(Icons.arrow_upward, size: 18),
+                  label: Text("Subir para o nível ${nivel + 1}"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldAccent,
+                    foregroundColor: const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  /// Sobe um nível: incrementa o nível, recalcula os stats derivados e soma o
+  /// PV ganho também ao PV atual.
+  void _subirNivel() {
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final nivelAtual = int.tryParse(sheet.level) ?? 1;
+    if (!Leveling.podeSubir(
+        classe: classe, nivelAtual: nivelAtual, xpAtual: sheet.xpAtual)) {
+      return;
+    }
+    final pvMaxAntes = sheet.pvMax;
+    setState(() => sheet.level = "${nivelAtual + 1}");
+    _recalc();
+    final ganhoPv = sheet.pvMax - pvMaxAntes;
+    if (ganhoPv > 0) {
+      setState(() {
+        sheet.pvAtual = (sheet.pvAtual + ganhoPv).clamp(0, sheet.pvMax);
+      });
+    }
+    _saveSheet();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Subiu para o nível ${sheet.level}!")),
+      );
+    }
   }
 
   Widget _buildNotasField() {
