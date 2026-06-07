@@ -68,12 +68,15 @@ void main() {
 
         for (final key in [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]) {
           final color = swatch[key]!;
-          expect(color.red, greaterThanOrEqualTo(0));
-          expect(color.red, lessThanOrEqualTo(255));
-          expect(color.green, greaterThanOrEqualTo(0));
-          expect(color.green, lessThanOrEqualTo(255));
-          expect(color.blue, greaterThanOrEqualTo(0));
-          expect(color.blue, lessThanOrEqualTo(255));
+          final r = (color.r * 255.0).round();
+          final g = (color.g * 255.0).round();
+          final b = (color.b * 255.0).round();
+          expect(r, greaterThanOrEqualTo(0));
+          expect(r, lessThanOrEqualTo(255));
+          expect(g, greaterThanOrEqualTo(0));
+          expect(g, lessThanOrEqualTo(255));
+          expect(b, greaterThanOrEqualTo(0));
+          expect(b, lessThanOrEqualTo(255));
         }
       });
     });

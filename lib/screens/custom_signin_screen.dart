@@ -6,7 +6,7 @@ import 'package:ods/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class CustomSignInScreen extends StatelessWidget {
-  const CustomSignInScreen({Key? key}) : super(key: key);
+  const CustomSignInScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class CustomSignInScreen extends StatelessWidget {
 }
 
 class CustomEmailSignInForm extends StatefulWidget {
-  const CustomEmailSignInForm({Key? key}) : super(key: key);
+  const CustomEmailSignInForm({super.key});
 
   @override
   State<StatefulWidget> createState() => _CustomEmailSignInFormState();
@@ -39,11 +39,13 @@ class _CustomEmailSignInFormState extends State<CustomEmailSignInForm> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      if (!mounted) return;
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.signInWithCredential(credential);
     } catch (e, stackTrace) {
       debugPrint('Google Sign-In Error: $e');
       debugPrint('Stack: $stackTrace');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro: ${e.runtimeType} - $e'),

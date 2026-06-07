@@ -9,12 +9,12 @@ class StatCard extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   const StatCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

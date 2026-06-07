@@ -29,7 +29,7 @@ import '../widgets/shop_item_card_widget.dart';
 class PlayScreen extends StatefulWidget {
   final Sheet sheet;
 
-  const PlayScreen({Key? key, required this.sheet}) : super(key: key);
+  const PlayScreen({super.key, required this.sheet});
 
   @override
   State<PlayScreen> createState() => _PlayScreenState();
@@ -534,7 +534,7 @@ class _PlayScreenState extends State<PlayScreen> {
         border: Border.all(color: const Color(0xFF3A3A5C), width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.goldAccent.withOpacity(0.2),
+            color: AppColors.goldAccent.withValues(alpha: 0.2),
             blurRadius: 8,
             spreadRadius: -2,
           ),
@@ -564,7 +564,7 @@ class _PlayScreenState extends State<PlayScreen> {
                           size: 22,
                           shadows: [
                             Shadow(
-                                color: AppColors.goldAccent.withOpacity(0.5),
+                                color: AppColors.goldAccent.withValues(alpha: 0.5),
                                 blurRadius: 6)
                           ]),
                       const SizedBox(width: 8),
@@ -572,7 +572,7 @@ class _PlayScreenState extends State<PlayScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           )),
                       const SizedBox(width: 10),
                       Text("${sheet.xpAtual}",
@@ -582,7 +582,7 @@ class _PlayScreenState extends State<PlayScreen> {
                             color: AppColors.goldAccent,
                             shadows: [
                               Shadow(
-                                  color: AppColors.goldAccent.withOpacity(0.3),
+                                  color: AppColors.goldAccent.withValues(alpha: 0.3),
                                   blurRadius: 4)
                             ],
                           )),
@@ -592,7 +592,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   Text(progresso,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                       )),
                 ],
               ),
@@ -871,7 +871,7 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: tipo,
+                initialValue: tipo,
                 decoration: const InputDecoration(labelText: "Tipo"),
                 items: const [
                   DropdownMenuItem(value: "geral", child: Text("Geral")),
@@ -1104,7 +1104,7 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: circulo,
+                initialValue: circulo,
                 decoration: const InputDecoration(labelText: "Círculo"),
                 items: [
                   for (int c = 1; c <= maxCirculo; c++)

@@ -9,11 +9,11 @@ class AttributeCard extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   const AttributeCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

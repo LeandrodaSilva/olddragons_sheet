@@ -4,7 +4,7 @@ import 'package:ods/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class AppDrawer extends StatefulWidget {
-  const AppDrawer({Key? key}) : super(key: key);
+  const AppDrawer({super.key});
 
   @override
   State<StatefulWidget> createState() => AppDrawerState();

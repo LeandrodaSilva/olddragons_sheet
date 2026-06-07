@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ods/widgets/edit_value_dialog.dart';
-import 'package:ods/constants/app_colors.dart';
 
 class PvBar extends StatefulWidget {
   final int pvAtual;
@@ -9,12 +8,12 @@ class PvBar extends StatefulWidget {
   final ValueChanged<int> onPvMaxChanged;
 
   const PvBar({
-    Key? key,
+    super.key,
     required this.pvAtual,
     required this.pvMax,
     required this.onPvAtualChanged,
     required this.onPvMaxChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<PvBar> createState() => _PvBarState();
@@ -68,9 +67,9 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
   }
 
   Color _glowColor(double porcentagem) {
-    if (porcentagem > 0.5) return const Color(0xFF4CAF50).withOpacity(0.6);
-    if (porcentagem > 0.25) return const Color(0xFFFF9800).withOpacity(0.6);
-    return const Color(0xFFF44336).withOpacity(0.6);
+    if (porcentagem > 0.5) return const Color(0xFF4CAF50).withValues(alpha: 0.6);
+    if (porcentagem > 0.25) return const Color(0xFFFF9800).withValues(alpha: 0.6);
+    return const Color(0xFFF44336).withValues(alpha: 0.6);
   }
 
   List<Color> _barGradient(double porcentagem) {
@@ -119,7 +118,7 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                     color: cor,
                     size: 28,
                     shadows: [
-                      Shadow(color: cor.withOpacity(0.5), blurRadius: 8),
+                      Shadow(color: cor.withValues(alpha: 0.5), blurRadius: 8),
                     ],
                   ),
                 ),
@@ -129,10 +128,10 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shadows: [
                       Shadow(
-                        color: cor.withOpacity(0.5),
+                        color: cor.withValues(alpha: 0.5),
                         blurRadius: 6,
                       ),
                     ],
@@ -149,7 +148,7 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                       fontWeight: FontWeight.bold,
                       color: cor,
                       shadows: [
-                        Shadow(color: cor.withOpacity(0.4), blurRadius: 8),
+                        Shadow(color: cor.withValues(alpha: 0.4), blurRadius: 8),
                       ],
                     ),
                   ),
@@ -158,7 +157,7 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                   " / ",
                   style: TextStyle(
                     fontSize: 20,
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
                 GestureDetector(
@@ -168,7 +167,7 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                     "${widget.pvMax}",
                     style: TextStyle(
                       fontSize: 20,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -228,8 +227,8 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(3),
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.3),
-                                  Colors.white.withOpacity(0.0),
+                                  Colors.white.withValues(alpha: 0.3),
+                                  Colors.white.withValues(alpha: 0.0),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -292,8 +291,8 @@ class _PvBarState extends State<PvBar> with SingleTickerProviderStateMixin {
       IconData icon, int amount, bool isDamage, VoidCallback onPressed) {
     final color = isDamage ? const Color(0xFFF44336) : const Color(0xFF4CAF50);
     final bgColor = isDamage
-        ? const Color(0xFFF44336).withOpacity(0.15)
-        : const Color(0xFF4CAF50).withOpacity(0.15);
+        ? const Color(0xFFF44336).withValues(alpha: 0.15)
+        : const Color(0xFF4CAF50).withValues(alpha: 0.15);
 
     return Material(
       color: bgColor,

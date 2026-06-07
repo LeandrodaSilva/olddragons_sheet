@@ -1,7 +1,7 @@
 import 'package:ods/models/class_model.dart';
 
 class ClassController {
-  List<Class> classes = [
+  List<Class> classes = const [
     Class(
       'Clérigo',
       'assets/images/cleric.png',

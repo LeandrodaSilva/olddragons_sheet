@@ -7,17 +7,15 @@ import '../helpers/test_helpers.dart';
 void main() {
   group('PvBar', () {
     int? lastPvAtual;
-    int? lastPvMax;
 
     Widget buildPvBar({int pvAtual = 15, int pvMax = 20}) {
       lastPvAtual = null;
-      lastPvMax = null;
       return wrapWithMaterialApp(
         PvBar(
           pvAtual: pvAtual,
           pvMax: pvMax,
           onPvAtualChanged: (v) => lastPvAtual = v,
-          onPvMaxChanged: (v) => lastPvMax = v,
+          onPvMaxChanged: (v) {},
         ),
       );
     }
