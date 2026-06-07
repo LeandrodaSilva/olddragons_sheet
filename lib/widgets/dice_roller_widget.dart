@@ -9,10 +9,10 @@ class DiceRollerWidget extends StatefulWidget {
   final Sheet sheet;
 
   const DiceRollerWidget({
-    Key? key,
+    super.key,
     required this.diceController,
     required this.sheet,
-  }) : super(key: key);
+  });
 
   @override
   State<DiceRollerWidget> createState() => _DiceRollerWidgetState();

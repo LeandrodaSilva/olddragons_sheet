@@ -10,12 +10,12 @@ class ItemCard extends StatelessWidget {
   final ValueChanged<int> onQuantityChanged;
 
   const ItemCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.onToggleEquip,
     required this.onDelete,
     required this.onQuantityChanged,
-  }) : super(key: key);
+  });
 
   IconData _iconForTipo(String tipo) {
     switch (tipo) {

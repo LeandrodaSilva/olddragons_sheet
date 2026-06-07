@@ -7,7 +7,6 @@ import '../helpers/test_helpers.dart';
 void main() {
   group('ItemCard', () {
     bool? toggleEquipCalled;
-    bool? deleteCalled;
     int? lastQuantity;
 
     Widget buildItemCard({
@@ -21,7 +20,6 @@ void main() {
       String descricao = '',
     }) {
       toggleEquipCalled = null;
-      deleteCalled = null;
       lastQuantity = null;
 
       final item = createTestItem(
@@ -39,7 +37,7 @@ void main() {
         ItemCard(
           item: item,
           onToggleEquip: () => toggleEquipCalled = true,
-          onDelete: () => deleteCalled = true,
+          onDelete: () {},
           onQuantityChanged: (v) => lastQuantity = v,
         ),
       );

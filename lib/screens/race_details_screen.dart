@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import '../models/sheet_model.dart';
 import '../widgets/race_card_widget.dart';
@@ -7,7 +5,7 @@ import '../widgets/race_card_widget.dart';
 class RaceDetailsScreen extends StatefulWidget {
   final Sheet item;
 
-  const RaceDetailsScreen({Key? key, required this.item}) : super(key: key);
+  const RaceDetailsScreen({super.key, required this.item});
 
   @override
   State<StatefulWidget> createState() => _RaceDetailsScreenState();

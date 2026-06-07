@@ -6,7 +6,7 @@ import 'package:ods/widgets/loading_widget.dart';
 import 'package:provider/provider.dart';
 
 class AuthMiddleware extends StatelessWidget {
-  const AuthMiddleware({Key? key, required this.child}) : super(key: key);
+  const AuthMiddleware({super.key, required this.child});
 
   final Widget child;
 
@@ -18,9 +18,9 @@ class AuthMiddleware extends StatelessWidget {
       builder: (context, snapshot) {
         // User is not signed in
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return LoadingWidget();
+          return const LoadingWidget();
         } else if (!snapshot.hasData) {
-          return CustomEmailSignInForm();
+          return const CustomEmailSignInForm();
         }
         // Render your application if authenticated
         return child;

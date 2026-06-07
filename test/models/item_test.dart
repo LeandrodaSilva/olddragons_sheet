@@ -154,7 +154,6 @@ void main() {
       test('handles peso as int from Firestore', () {
         final item = Item.fromMap('id1', {'peso': 5});
         expect(item.peso, 5.0);
-        expect(item.peso is double, true);
       });
 
       test('handles peso as double from Firestore', () {

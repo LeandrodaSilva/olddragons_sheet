@@ -6,7 +6,6 @@ import 'package:ods/constants/app_colors.dart';
 import 'package:ods/controllers/class_controller.dart';
 import 'package:ods/models/character_model.dart';
 import 'package:ods/screens/add_sheet_screen.dart';
-import 'package:ods/screens/race_details_screen.dart';
 import 'package:ods/utils/custom_scroll_behavior_util.dart';
 import '../models/class_model.dart';
 import '../models/sheet_model.dart';
@@ -16,8 +15,7 @@ class ClassSelectionScreen extends StatefulWidget {
   final Character character;
 
   const ClassSelectionScreen(
-      {Key? key, required this.sheet, required this.character})
-      : super(key: key);
+      {super.key, required this.sheet, required this.character});
 
   @override
   State<ClassSelectionScreen> createState() => _ClassSelectionScreenState();
@@ -58,7 +56,7 @@ class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                     child: Container(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       alignment: Alignment.center,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -154,7 +152,7 @@ class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
                           Container(
                             margin: const EdgeInsets.fromLTRB(0, 50, 0, 0),
                             child: Text(
-                              widget.character.name + ": " + raceName,
+                              "${widget.character.name}: $raceName",
                               style: const TextStyle(
                                 fontSize: 28.0,
                                 fontWeight: FontWeight.bold,

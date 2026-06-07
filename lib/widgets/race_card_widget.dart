@@ -10,7 +10,7 @@ class RaceDetailsCard extends StatefulWidget {
   final Sheet sheet;
   late final Character character;
 
-  RaceDetailsCard({Key? key, required this.sheet}) : super(key: key) {
+  RaceDetailsCard({super.key, required this.sheet}) {
     character = CharacterController().findOneByRaceName(sheet.race);
   }
 

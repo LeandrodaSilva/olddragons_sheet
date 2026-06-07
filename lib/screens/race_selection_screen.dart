@@ -8,7 +8,7 @@ import 'package:ods/utils/custom_scroll_behavior_util.dart';
 import '../models/sheet_model.dart';
 
 class RaceSelectionScreen extends StatefulWidget {
-  const RaceSelectionScreen({Key? key}) : super(key: key);
+  const RaceSelectionScreen({super.key});
 
   @override
   State<RaceSelectionScreen> createState() => _RaceSelectionScreenState();

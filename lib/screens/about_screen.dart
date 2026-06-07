@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ods/constants/app_colors.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({Key? key}) : super(key: key);
+  const AboutScreen({super.key});
 
   // Mantido em sincronia com a versão do pubspec.yaml.
   static const String _versao = "2.1.0";

@@ -9,11 +9,11 @@ class ShopItemCard extends StatelessWidget {
   final VoidCallback onBuy;
 
   const ShopItemCard({
-    Key? key,
+    super.key,
     required this.item,
     required this.canBuy,
     required this.onBuy,
-  }) : super(key: key);
+  });
 
   IconData _iconForTipo(String tipo) {
     switch (tipo) {

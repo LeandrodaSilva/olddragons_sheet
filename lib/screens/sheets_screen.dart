@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import '../models/sheet_model.dart';
 
 class SheetsScreen extends StatefulWidget {
-  const SheetsScreen({Key? key, required this.title}) : super(key: key);
+  const SheetsScreen({super.key, required this.title});
 
   final String title;
 

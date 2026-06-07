@@ -10,7 +10,7 @@ import '../models/sheet_model.dart';
 class AddSheetScreen extends StatefulWidget {
   final Sheet item;
 
-  const AddSheetScreen({Key? key, required this.item}) : super(key: key);
+  const AddSheetScreen({super.key, required this.item});
 
   @override
   State<StatefulWidget> createState() => _AddSheetScreenState();
@@ -111,7 +111,7 @@ class _AddSheetScreenState extends State<AddSheetScreen> {
                               ),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                value: item.align.isNotEmpty
+                                initialValue: item.align.isNotEmpty
                                     ? item.align
                                     : null,
                                 decoration: const InputDecoration(

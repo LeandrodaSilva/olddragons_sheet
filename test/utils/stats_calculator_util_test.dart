@@ -97,7 +97,7 @@ void main() {
     });
 
     group('baseAtaque() e jpBase()', () {
-      final classe = const Class(
+      const classe = Class(
         'Teste',
         '',
         '',
