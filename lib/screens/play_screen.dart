@@ -68,10 +68,37 @@ class _PlayScreenState extends State<PlayScreen> {
 
   Future<void> _saveSheet() async {
     _isSaving = true;
-    final sc = Provider.of<SheetController>(context, listen: false);
-    await sc.add(sheet);
-    if (mounted) {
-      _isSaving = false;
+    try {
+      final sc = Provider.of<SheetController>(context, listen: false);
+      await sc.add(sheet);
+    } catch (_) {
+      _notifyError("Erro ao salvar a ficha. Verifique sua conexão.");
+    } finally {
+      if (mounted) {
+        _isSaving = false;
+      }
+    }
+  }
+
+  /// Exibe uma mensagem de erro ao usuário (no-op se a tela já foi desmontada).
+  void _notifyError(String mensagem) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red[700],
+      ),
+    );
+  }
+
+  /// Executa uma ação assíncrona de inventário exibindo erro ao usuário em
+  /// caso de falha.
+  Future<void> _runComFeedback(
+      Future<void> Function() acao, String mensagemErro) async {
+    try {
+      await acao();
+    } catch (_) {
+      _notifyError(mensagemErro);
     }
   }
 
@@ -715,7 +742,10 @@ class _PlayScreenState extends State<PlayScreen> {
       peso: shopItem.peso,
     );
 
-    _inventoryController.addItem(copia);
+    _runComFeedback(
+      () => _inventoryController.addItem(copia),
+      "Erro ao adicionar o item comprado.",
+    );
     _saveSheet();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -760,15 +790,18 @@ class _PlayScreenState extends State<PlayScreen> {
                         final item = items[index];
                         return ItemCard(
                           item: item,
-                          onToggleEquip: () {
-                            inventoryController.toggleEquipped(item);
-                          },
-                          onDelete: () {
-                            inventoryController.removeItem(item);
-                          },
-                          onQuantityChanged: (q) {
-                            inventoryController.updateQuantity(item, q);
-                          },
+                          onToggleEquip: () => _runComFeedback(
+                            () => inventoryController.toggleEquipped(item),
+                            "Erro ao equipar o item.",
+                          ),
+                          onDelete: () => _runComFeedback(
+                            () => inventoryController.removeItem(item),
+                            "Erro ao remover o item.",
+                          ),
+                          onQuantityChanged: (q) => _runComFeedback(
+                            () => inventoryController.updateQuantity(item, q),
+                            "Erro ao atualizar a quantidade.",
+                          ),
                         );
                       },
                     ),
@@ -842,11 +875,14 @@ class _PlayScreenState extends State<PlayScreen> {
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
-                _inventoryController.addItem(Item(
-                  nome: nome,
-                  tipo: tipo,
-                  peso: peso,
-                ));
+                _runComFeedback(
+                  () => _inventoryController.addItem(Item(
+                    nome: nome,
+                    tipo: tipo,
+                    peso: peso,
+                  )),
+                  "Erro ao adicionar o item.",
+                );
                 Navigator.of(ctx).pop();
               }
             },

@@ -20,7 +20,7 @@ class ClassSelectionScreen extends StatefulWidget {
       : super(key: key);
 
   @override
-  _ClassSelectionScreenState createState() => _ClassSelectionScreenState();
+  State<ClassSelectionScreen> createState() => _ClassSelectionScreenState();
 }
 
 class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
