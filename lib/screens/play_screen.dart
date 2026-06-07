@@ -8,7 +8,11 @@ import 'package:ods/controllers/dice_controller.dart';
 import 'package:ods/controllers/shop_controller.dart';
 import 'package:ods/controllers/inventory_controller.dart';
 import 'package:ods/controllers/sheet_controller.dart';
+import 'package:ods/controllers/spell_controller.dart';
+import 'package:ods/models/class_model.dart';
+import 'package:ods/models/spell_model.dart';
 import 'package:ods/utils/leveling_util.dart';
+import 'package:ods/utils/magic_calculator_util.dart';
 import 'package:ods/utils/stats_calculator_util.dart';
 import 'package:ods/widgets/attribute_card_widget.dart';
 import 'package:ods/widgets/edit_value_dialog.dart';
@@ -42,6 +46,7 @@ class _PlayScreenState extends State<PlayScreen> {
   final ShopController _shopController = ShopController();
   final DiceController _diceController = DiceController();
   late final InventoryController _inventoryController;
+  late final SpellController _spellController;
 
   @override
   void initState() {
@@ -49,6 +54,8 @@ class _PlayScreenState extends State<PlayScreen> {
     sheet = widget.sheet;
     _inventoryController = InventoryController(sheetId: sheet.id);
     _inventoryController.addListener(_onInventoryChanged);
+    _spellController = SpellController(sheetId: sheet.id);
+    _spellController.addListener(_onSpellsChanged);
     final sc = Provider.of<SheetController>(context, listen: false);
     _sheetSubscription = sc.listenToSheet(
       sheet.id,
@@ -104,6 +111,10 @@ class _PlayScreenState extends State<PlayScreen> {
 
   void _onInventoryChanged() {
     if (_recalc()) _saveSheet();
+  }
+
+  void _onSpellsChanged() {
+    if (mounted) setState(() {});
   }
 
   List<Item> get _equipados =>
@@ -165,37 +176,52 @@ class _PlayScreenState extends State<PlayScreen> {
     _sheetSubscription?.cancel();
     _inventoryController.removeListener(_onInventoryChanged);
     _inventoryController.dispose();
+    _spellController.removeListener(_onSpellsChanged);
+    _spellController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [
+    final classe = _classController.findOneByClassName(sheet.classEspec);
+    final isConjurador = classe.conjurador;
+
+    final tabs = <Widget>[
       _buildFichaTab(),
       _buildInventarioTab(),
       _buildLojaTab(),
-      DiceRollerWidget(diceController: _diceController, sheet: sheet),
     ];
+    final navItems = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Ficha"),
+      const BottomNavigationBarItem(
+          icon: Icon(Icons.backpack), label: "Inventário"),
+      const BottomNavigationBarItem(icon: Icon(Icons.store), label: "Loja"),
+    ];
+    if (isConjurador) {
+      tabs.add(_buildMagiasTab(classe));
+      navItems.add(const BottomNavigationBarItem(
+          icon: Icon(Icons.auto_stories), label: "Magias"));
+    }
+    tabs.add(DiceRollerWidget(diceController: _diceController, sheet: sheet));
+    navItems.add(
+        const BottomNavigationBarItem(icon: Icon(Icons.casino), label: "Dados"));
+
+    final indiceAtual = _currentTab.clamp(0, tabs.length - 1);
 
     return ChangeNotifierProvider<InventoryController>.value(
       value: _inventoryController,
       child: Scaffold(
-      appBar: AppBar(
-        title: Text("${sheet.name} — Nv.${sheet.level}"),
-      ),
-      body: tabs[_currentTab],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        onTap: (index) => setState(() => _currentTab = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Ficha"),
-          BottomNavigationBarItem(icon: Icon(Icons.backpack), label: "Inventário"),
-          BottomNavigationBarItem(icon: Icon(Icons.store), label: "Loja"),
-          BottomNavigationBarItem(icon: Icon(Icons.casino), label: "Dados"),
-        ],
-      ),
+        appBar: AppBar(
+          title: Text("${sheet.name} — Nv.${sheet.level}"),
+        ),
+        body: tabs[indiceAtual],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: indiceAtual,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppColors.primary,
+          onTap: (index) => setState(() => _currentTab = index),
+          items: navItems,
+        ),
       ),
     );
   }
@@ -893,4 +919,233 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  // === ABA MAGIAS ===
+
+  Widget _buildMagiasTab(Class classe) {
+    final nivel = int.tryParse(sheet.level) ?? 1;
+    final atributo =
+        classe.tipoMagia == 'arcana' ? sheet.inteligencia : sheet.sabedoria;
+    final magias = MagicCalculator.magiasPorDia(
+        classe: classe, nivel: nivel, atributoConjurador: atributo);
+    final maiorCirc = MagicCalculator.maiorCirculo(classe: classe, nivel: nivel);
+    final atributoLabel = classe.tipoMagia == 'arcana' ? 'INT' : 'SAB';
+    final tipoLabel = classe.tipoMagia == 'arcana' ? 'arcanas' : 'divinas';
+
+    if (maiorCirc == 0) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text("Sem magias disponíveis neste nível.",
+              style: TextStyle(color: Colors.grey[600])),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text("Magias $tipoLabel • inclui bônus por $atributoLabel",
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                  ),
+                  TextButton.icon(
+                    onPressed: _descansar,
+                    icon: const Icon(Icons.bedtime, size: 18),
+                    label: const Text("Descansar"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              for (int c = 1; c <= maiorCirc; c++) ...[
+                _buildCirculoSection(c, magias[c - 1]),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 4),
+              ElevatedButton.icon(
+                onPressed: () => _showAddSpellDialog(maiorCirc),
+                icon: const Icon(Icons.add),
+                label: const Text("Adicionar Magia"),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCirculoSection(int circulo, int total) {
+    final usadas = sheet.magiasUsadas[circulo - 1];
+    final disponiveis = total - usadas;
+    final magiasCirc = _spellController.doCirculo(circulo);
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text("Círculo $circulo",
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline, size: 22),
+                  onPressed: () => _alterarMagiaUsada(circulo - 1, 1, total),
+                  tooltip: "Gastar magia",
+                ),
+                Text("$disponiveis / $total",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 22),
+                  onPressed: () => _alterarMagiaUsada(circulo - 1, -1, total),
+                  tooltip: "Recuperar magia",
+                ),
+              ],
+            ),
+            if (magiasCirc.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text("Nenhuma magia anotada.",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              ),
+            for (final magia in magiasCirc) _buildSpellTile(magia),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpellTile(Spell magia) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      leading: IconButton(
+        icon: Icon(
+          magia.preparada ? Icons.check_circle : Icons.circle_outlined,
+          color: magia.preparada ? AppColors.primary : Colors.grey,
+          size: 20,
+        ),
+        onPressed: () => _runComFeedback(
+          () => _spellController.togglePreparada(magia),
+          "Erro ao atualizar a magia.",
+        ),
+        tooltip: magia.preparada ? "Preparada" : "Não preparada",
+      ),
+      title: Text(magia.nome,
+          style: TextStyle(
+              fontWeight:
+                  magia.preparada ? FontWeight.bold : FontWeight.normal)),
+      subtitle: magia.descricao.isNotEmpty
+          ? Text(magia.descricao, style: const TextStyle(fontSize: 12))
+          : null,
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline, size: 20),
+        onPressed: () => _runComFeedback(
+          () => _spellController.removeSpell(magia),
+          "Erro ao remover a magia.",
+        ),
+      ),
+    );
+  }
+
+  void _alterarMagiaUsada(int idx, int delta, int total) {
+    final novo = (sheet.magiasUsadas[idx] + delta).clamp(0, total);
+    if (novo == sheet.magiasUsadas[idx]) return;
+    setState(() => sheet.magiasUsadas[idx] = novo);
+    _saveSheet();
+  }
+
+  void _descansar() {
+    setState(() => sheet.magiasUsadas = [0, 0, 0, 0, 0]);
+    _saveSheet();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Você descansou: magias restauradas.")),
+      );
+    }
+  }
+
+  void _showAddSpellDialog(int maxCirculo) {
+    String nome = "";
+    String descricao = "";
+    int circulo = 1;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Adicionar Magia"),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Nome"),
+                autofocus: true,
+                validator: (v) =>
+                    v == null || v.isEmpty ? "Informe o nome" : null,
+                onSaved: (v) => nome = v ?? "",
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<int>(
+                value: circulo,
+                decoration: const InputDecoration(labelText: "Círculo"),
+                items: [
+                  for (int c = 1; c <= maxCirculo; c++)
+                    DropdownMenuItem(value: c, child: Text("$cº círculo")),
+                ],
+                onChanged: (v) => circulo = v ?? 1,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                decoration:
+                    const InputDecoration(labelText: "Descrição (opcional)"),
+                onSaved: (v) => descricao = v ?? "",
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                formKey.currentState!.save();
+                _runComFeedback(
+                  () => _spellController.addSpell(Spell(
+                    nome: nome,
+                    circulo: circulo,
+                    descricao: descricao,
+                    preparada: true,
+                  )),
+                  "Erro ao adicionar a magia.",
+                );
+                Navigator.of(ctx).pop();
+              }
+            },
+            child: const Text("Adicionar"),
+          ),
+        ],
+      ),
+    );
+  }
 }

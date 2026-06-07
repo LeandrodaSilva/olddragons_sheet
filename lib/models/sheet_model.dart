@@ -41,6 +41,9 @@ class Sheet {
   int movOutros;
   int pvOutros;
 
+  // Magias gastas por círculo (1º ao 5º). Sempre 5 posições.
+  List<int> magiasUsadas;
+
   // Notas
   String notas;
 
@@ -76,8 +79,9 @@ class Sheet {
     this.jpOutros = 0,
     this.movOutros = 0,
     this.pvOutros = 0,
+    List<int>? magiasUsadas,
     this.notas = "",
-  });
+  }) : magiasUsadas = magiasUsadas ?? [0, 0, 0, 0, 0];
 
   Map<String, dynamic> toMap() {
     return {
@@ -111,6 +115,7 @@ class Sheet {
       'jpOutros': jpOutros,
       'movOutros': movOutros,
       'pvOutros': pvOutros,
+      'magiasUsadas': magiasUsadas,
       'notas': notas,
     };
   }
@@ -148,8 +153,21 @@ class Sheet {
       jpOutros: data['jpOutros'] ?? 0,
       movOutros: data['movOutros'] ?? 0,
       pvOutros: data['pvOutros'] ?? 0,
+      magiasUsadas: _parseMagiasUsadas(data['magiasUsadas']),
       notas: data['notas'] ?? "",
     );
+  }
+
+  /// Normaliza o campo de magias gastas para sempre ter 5 posições inteiras.
+  static List<int> _parseMagiasUsadas(dynamic raw) {
+    final resultado = [0, 0, 0, 0, 0];
+    if (raw is List) {
+      for (var i = 0; i < resultado.length && i < raw.length; i++) {
+        final valor = raw[i];
+        if (valor is int) resultado[i] = valor;
+      }
+    }
+    return resultado;
   }
 
   /// Calcula o modificador de atributo conforme T1-1 do livro básico
